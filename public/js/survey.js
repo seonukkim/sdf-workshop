@@ -115,7 +115,8 @@ function common(root, rerender) {
     if (act === 'lang') { setLang(S.lang === 'ko' ? 'en' : 'ko'); rerender(); }
     if (act === 'back') {
       if ((D.step || 0) === 2 && (D.item || 0) > 0) { D.item -= 1; save(); render(); }
-      else if ((D.step || 0) === 0) go('/');
+      // back from the first survey step: to the booking they just made (the Pass question opens again there)
+      else if ((D.step || 0) === 0) go(S.match?.state?.result === 'booked' ? '/booked' : '/');
       else { D.step -= 1; save(); render(); }
     }
     if (act === 'rate') {

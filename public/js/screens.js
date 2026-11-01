@@ -311,6 +311,12 @@ export function startMatch() {
 // the answer is recorded (the last one counts) and they go straight on to the rating. "Back to my booking"
 // closes it without an answer.
 let subNext = null;
+// where the person came from: going back from the rating to the booking asks again, so a wrong tap can be changed
+// (presenter jumps do not count)
+let prevPath = location.pathname;
+let viaJump = false;
+window.addEventListener('tmc:route', (e) => { prevPath = e.detail || location.pathname; });
+const SUBKEY = { yes: 'subYes', maybe: 'subMaybe', no: 'subNo' };
 export function skipSubscribe() {
   const w = app().querySelector('.sub-sheet')?.parentElement;
   if (!w) return false;
@@ -323,20 +329,22 @@ export function skipSubscribe() {
   return true;
 }
 
-export function openSubscribe(moment, onNext, { preview = false } = {}) {
+export function openSubscribe(moment, onNext, { preview = false, again = false } = {}) {
   if (app().querySelector('.sub-sheet')) return;
   subNext = onNext;
   const f = S.flow;
   const secs = Math.max(1, Math.floor(S.match?.state?.winAt || 7)); // whole seconds, like the 0:06 timer on the wait screen
   S.subSheet = moment;
   emit('select');
+  const prev = again ? f[moment === 'post' ? 'subPost' : 'subPre'] : null; // their earlier answer, shown so they can change it
+  const ansBtn = (v, cls) => `<button class="btn ${cls} btn-lg btn-block ${prev === v ? 'picked' : ''}" data-ans="${v}" aria-pressed="${prev === v}">${prev === v ? icon('check', 'sm') : ''}${t(SUBKEY[v])}</button>`;
   const wrap = document.createElement('div');
   wrap.innerHTML = `
     <div class="scrim"></div>
     <div class="sheet sub-sheet" role="dialog" aria-modal="true" aria-label="${esc(t('subQ'))}">
       <div class="grab"></div>
       <div class="sheet-body sub-body">
-        <p class="sub-kicker">${t('subAsk')}</p>
+        <p class="sub-kicker">${again ? t('subAgain') : t('subAsk')}</p>
         <div class="pass-card">
           <span class="pass-tag">${icon('star', 'xs')}${t('subName')}</span>
           <h2 class="h-title">${t('subQPost')}</h2>
@@ -344,10 +352,9 @@ export function openSubscribe(moment, onNext, { preview = false } = {}) {
           <div class="pass-price"><b>${t('subPrice')}</b><span>${t('subPer')}</span></div>
           <p class="sub-free">${icon('info', 'xs')}${t('subFree')}</p>
         </div>
+        ${prev ? `<p class="sub-prev">${t('subPrev', { a: t(SUBKEY[prev]) })}</p>` : ''}
         <div class="sub-answers" role="group" aria-label="${esc(t('subQ'))}">
-          <button class="btn btn-primary btn-lg btn-block" data-ans="yes">${t('subYes')}</button>
-          <button class="btn btn-line btn-lg btn-block" data-ans="maybe">${t('subMaybe')}</button>
-          <button class="btn btn-line btn-lg btn-block" data-ans="no">${t('subNo')}</button>
+          ${ansBtn('yes', 'btn-primary')}${ansBtn('maybe', 'btn-line')}${ansBtn('no', 'btn-line')}
         </div>
         <button class="sub-back" data-act="back">${icon('left', 'sm')}${t('subBack')}</button>
       </div>
@@ -703,9 +710,13 @@ export function booked() {
       if (a.dataset.act === 'lang') onLang(booked);
       if (a.dataset.act === 'restart') { resetFlow(); go('/'); }
       // the subscribe question comes when they choose to move on, then the rating
-      if (a.dataset.act === 'rate') openSubscribe('post', () => go('/rate'));
+      if (a.dataset.act === 'rate') openSubscribe('post', () => go('/rate'), { again: !!S.flow.subPost });
     });
-    return () => { clearInterval(tick); map && map.destroy(); };
+    // back from the rating: ask again (with the earlier answer marked) so a mistaken tap can be changed
+    const askAgain = !params.shot && !viaJump && prevPath === '/rate'
+      ? setTimeout(() => openSubscribe('post', () => go('/rate'), { again: true }), 400) : null;
+    viaJump = false;
+    return () => { clearInterval(tick); clearTimeout(askAgain); map && map.destroy(); };
   });
 }
 
@@ -792,6 +803,7 @@ export function jumpTo(step) {
     if (S.match) S.match.stop();
     S.match = frozenMatch({ items, party: S.party, when: S.when, mode: 'booked' });
     S.flow.tried = true;
+    viaJump = true;
     go('/booked');
   }
 }
