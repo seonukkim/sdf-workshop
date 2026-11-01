@@ -723,17 +723,19 @@ export function booked() {
 export function qual() {
   const steps = ['qual1t', 'qual2t', 'qual3t'];
   const icons = ['utensils', 'alert', 'sliders'];
+  // the workshop's 3M pack has five colours: one per feature (choose, wait, booked) and per what-if question
+  const colors = [['yellow', 'blue', 'green'], ['orange', 'pink'], ['yellow', 'pink', 'blue', 'green', 'orange']];
   const now = Math.min(S.qual || 0, steps.length - 1);
   mount(`
   <section class="screen" data-screen="qual">
     <header class="bar"><span class="icon-btn" aria-hidden="true"></span><div class="title">${t('stepQual')}</div>${testBadge()}${langBtn()}</header>
     <div class="body">
       <div class="qual-hero">
-        <div class="postits" aria-hidden="true"><i></i><i></i><i></i></div>
+        <div class="postits" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
         <h1 class="h-title">${t('qualPhoneTitle')}</h1>
         <p class="t-sub">${t('qualPhoneBody')}</p>
       </div>
-      <ol class="qual-list">${steps.map((k, i) => `<li class="${i < now ? 'done' : i === now ? 'now' : ''}"><span class="n">${icon(icons[i], 'sm')}</span><b>${t(k)}</b></li>`).join('')}</ol>
+      <ol class="qual-list">${steps.map((k, i) => `<li class="${i < now ? 'done' : i === now ? 'now' : ''}"><span class="n">${icon(icons[i], 'sm')}</span><b>${t(k)}</b><span class="sw">${colors[i].map((c) => `<i class="pi-${c}"></i>`).join('')}</span></li>`).join('')}</ol>
     </div>
     <div class="dock"><button class="btn btn-line btn-lg btn-block" data-act="home">${icon('refresh')}${t('qualHome')}</button></div>
   </section>`, (root) => {

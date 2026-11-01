@@ -30,6 +30,12 @@
   --sim: #4F46C8;            /* marks simulated content */
   --sim-tint: #EEEDFC;
   --me: #2563EB;             /* "you are here" */
+  /* the workshop's post-its (3M Super Sticky, 5 colours): yellow, pink, blue, green, orange */
+  --pi-yellow: #FFD23F;
+  --pi-pink: #F59AC0;
+  --pi-blue: #3DB8EC;
+  --pi-green: #8DC63F;
+  --pi-orange: #FF8A3D;
   /* shape */
   --r-xs: 6px;
   --r-sm: 8px;
@@ -589,11 +595,20 @@ textarea.input { height: auto; min-height: 64px; padding: 12px 14px; resize: ver
 /* phone: the offline (paper) part */
 .qual-hero { padding: 28px var(--gutter) 8px; text-align: center; }
 .qual-hero .t-sub { margin: 8px 0 0; }
-.postits { position: relative; width: 150px; height: 86px; margin: 0 auto 14px; }
-.postits i { position: absolute; width: 64px; height: 64px; border-radius: 4px; box-shadow: 0 6px 14px rgba(0, 0, 0, .12); }
-.postits i:nth-child(1) { left: 6px; top: 14px; background: #FFE27A; transform: rotate(-8deg); }
-.postits i:nth-child(2) { left: 44px; top: 4px; background: #FFB4C6; transform: rotate(4deg); }
-.postits i:nth-child(3) { left: 82px; top: 16px; background: #A8E6CF; transform: rotate(10deg); }
+.postits { position: relative; width: 164px; height: 64px; margin: 0 auto 14px; }
+.postits i { position: absolute; top: 4px; width: 56px; height: 56px; border-radius: 3px; box-shadow: 0 4px 10px rgba(0, 0, 0, .14); }
+.postits i:nth-child(1) { left: 0; background: var(--pi-yellow); }
+.postits i:nth-child(2) { left: 27px; background: var(--pi-pink); }
+.postits i:nth-child(3) { left: 54px; background: var(--pi-blue); }
+.postits i:nth-child(4) { left: 81px; background: var(--pi-green); }
+.postits i:nth-child(5) { left: 108px; background: var(--pi-orange); }
+.pi-yellow { background: var(--pi-yellow); }
+.pi-pink { background: var(--pi-pink); }
+.pi-blue { background: var(--pi-blue); }
+.pi-green { background: var(--pi-green); }
+.pi-orange { background: var(--pi-orange); }
+.sw { display: inline-flex; gap: 4px; margin-left: auto; }
+.sw i { width: 14px; height: 14px; border-radius: 2px; box-shadow: 0 1px 2px rgba(0, 0, 0, .18); }
 .qual-list { list-style: none; margin: 12px var(--gutter); padding: 0; display: grid; gap: 8px; }
 .qual-list li { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 14px; border: 1px solid var(--line); background: #fff; font-size: 15px; }
 .qual-list li .n { width: 34px; height: 34px; flex: none; border-radius: 10px; display: grid; place-items: center; background: var(--bg-2); color: var(--ink-2); }
@@ -827,7 +842,9 @@ textarea.input { height: auto; min-height: 64px; padding: 12px 14px; resize: ver
   .pv-qual-steps button { display: flex; align-items: center; gap: 12px; height: 64px; padding: 0 18px; border-radius: 18px; background: rgba(255, 255, 255, .6); color: var(--ink-3); text-align: left; font-size: 19px; line-height: 22px; font-weight: 800; }
   .pv-qual-steps .n { display: grid; place-items: center; width: 32px; height: 32px; flex: none; border-radius: 10px; background: var(--line); color: var(--ink-2); font-size: 15px; }
   .pv-qual-steps .l { display: flex; flex-direction: column; min-width: 0; }
-  .pv-qual-steps .min { display: inline-flex; align-items: center; height: 28px; margin-left: auto; padding: 0 12px; border-radius: 999px; background: var(--bg-2); color: var(--ink-3); font-size: 14px; font-weight: 750; }
+  .pv-qual-steps .sw { gap: 3px; }
+  .pv-qual-steps .sw i { width: 12px; height: 12px; }
+  .pv-qual-steps .min { display: inline-flex; align-items: center; height: 28px; margin-left: 10px; padding: 0 12px; border-radius: 999px; background: var(--bg-2); color: var(--ink-3); font-size: 14px; font-weight: 750; }
   .pv-qual-steps button.done { background: #fff; color: var(--ink-2); }
   .pv-qual-steps button.done .n { background: var(--ink); color: #fff; }
   .pv-qual-steps button.now { background: #fff; color: var(--ink); box-shadow: inset 0 0 0 3px var(--brand); }
@@ -836,14 +853,14 @@ textarea.input { height: auto; min-height: 64px; padding: 12px 14px; resize: ver
   .pv-qual-body { height: 504px; flex: none; }
   .pv-shot { display: flex; flex-direction: column; align-items: center; gap: 14px; height: 504px; margin: 0; padding: 18px; }
   .pv-shot figcaption { display: flex; align-items: center; gap: 12px; align-self: stretch; height: 44px; font-size: 22px; line-height: 26px; font-weight: 800; }
-  .pv-shot figcaption .n { display: grid; place-items: center; width: 36px; height: 36px; flex: none; border-radius: 50%; background: var(--ink); color: #fff; font-size: 16px; }
+  /* post-it badge: the colour people write on for that feature or question */
+  .pi { display: grid; place-items: center; width: 36px; height: 36px; flex: none; border-radius: 3px; color: var(--ink); font-size: 16px; font-weight: 850; box-shadow: 0 2px 6px rgba(0, 0, 0, .16); }
+  .pi.big { width: 56px; height: 56px; }
+  .pi.big .ic { width: 30px; height: 30px; color: var(--ink); }
   .pv-phone { --s: .4763; position: relative; width: calc(390px * var(--s) + 8px); height: calc(844px * var(--s) + 8px); flex: none; overflow: hidden; border: 4px solid #151515; border-radius: 22px; background: #fff; }
   .pv-phone iframe { position: absolute; left: 0; top: 0; width: 390px; height: 844px; border: 0; transform: scale(var(--s)); transform-origin: 0 0; pointer-events: none; }
-  .pv-whatif { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 18px; height: 504px; margin: 0; padding: 18px; border-radius: 18px; background: var(--warn-tint); }
-  .pv-whatif + .pv-whatif { background: var(--bg-2); }
-  .pv-whatif figcaption { display: flex; flex-direction: column; gap: 10px; }
-  .pv-whatif figcaption .ic { width: 44px; height: 44px; color: var(--warn); }
-  .pv-whatif + .pv-whatif figcaption .ic { color: var(--ink-2); }
+  .pv-whatif { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 18px; height: 504px; margin: 0; padding: 18px; border-radius: 18px; background: #fff; box-shadow: var(--shadow-1); }
+  .pv-whatif figcaption { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; }
   .pv-whatif b { font-size: 30px; line-height: 36px; font-weight: 850; letter-spacing: -.02em; }
   .pv .pv-whatif .ko { font-size: 16px; line-height: 20px; }
   .pv-whatif .pv-phone { --s: .5450; }

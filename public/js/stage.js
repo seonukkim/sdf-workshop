@@ -347,18 +347,21 @@ function dQuant() {
     </div>`;
 }
 
-// step 5 · Qual: offline on A3 paper with post-its, in three timed parts
+// step 5 · Qual: offline on A3 paper with post-its, in three timed parts. The workshop's 3M pack has five
+// colours, one per prompt: Choose yellow, Wait blue, Booked green, what if 1 orange, what if 2 pink.
+const PART_COLORS = [['yellow', 'blue', 'green'], ['orange', 'pink'], ['yellow', 'pink', 'blue', 'green', 'orange']];
 function dQual() {
   const q = Math.min(S.qual || 0, QUAL_STEPS - 1);
   const parts = ['qual1t', 'qual2t', 'qual3t'];
-  const chips = parts.map((k, i) => `<button class="s4 ${i < q ? 'done' : i === q ? 'now' : ''}" data-qual="${i}"><span class="n">${i + 1}</span><span class="l">${en(k)}<small class="ko">${ko(k)}</small></span><span class="min">${en('pvMin', { n: TIMER_MIN[`q${i}`] })}</span></button>`).join('');
+  const sw = (cs) => `<span class="sw">${cs.map((c) => `<i class="pi-${c}"></i>`).join('')}</span>`;
+  const chips = parts.map((k, i) => `<button class="s4 ${i < q ? 'done' : i === q ? 'now' : ''}" data-qual="${i}"><span class="n">${i + 1}</span><span class="l">${en(k)}<small class="ko">${ko(k)}</small></span>${sw(PART_COLORS[i])}<span class="min">${en('pvMin', { n: TIMER_MIN[`q${i}`] })}</span></button>`).join('');
   let body = '';
   if (q === 0) {
     const feats = [['step1', 'choose'], ['step2', 'wait'], ['step3', 'booked']];
-    body = feats.map(([k, shot], i) => `<figure class="pv-shot s4"><figcaption><span class="n">${i + 1}</span><span>${bi(k)}</span></figcaption>${phone(shot)}</figure>`).join('');
+    body = feats.map(([k, shot], i) => `<figure class="pv-shot s4"><figcaption><span class="pi pi-${PART_COLORS[0][i]}">${i + 1}</span><span>${bi(k)}</span></figcaption>${phone(shot)}</figure>`).join('');
   } else if (q === 1) {
     const qs = [['alert', 'qual2a', 'bad'], ['ban', 'qual2b', 'none']];
-    body = qs.map(([ic, k, shot]) => `<figure class="pv-whatif s6"><figcaption>${icon(ic)}<b>${en(k)}</b><span class="ko">${ko(k)}</span></figcaption>${phone(shot)}</figure>`).join('');
+    body = qs.map(([ic, k, shot], i) => `<figure class="pv-whatif s6"><figcaption><span class="pi big pi-${PART_COLORS[1][i]}">${icon(ic)}</span><b>${en(k)}</b><span class="ko">${ko(k)}</span></figcaption>${phone(shot)}</figure>`).join('');
   } else {
     body = quad('qual3x', 'qual3y', ['qpMP', 'qpNP', 'qpMF', 'qpNN'], 's12');
   }
