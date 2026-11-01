@@ -2,7 +2,7 @@
 
 **Live:** https://sdf.seonukkim.com · **Repo:** https://github.com/seonukkim/sdf-workshop · SDF26F Team B (Service Design Fundamentals, UNIST)
 
-A Wizard-of-Oz prototype for the co-design workshop. Today is your anniversary, you forgot to book, your first choice in Ulsan is full and you can only walk. Pick nearby restaurants (who recommended them is shown), ask them all at once by Instagram DM or AI call, and **the first one to say Yes gets your booking**. Sending requests comes with **TrustMyChef Pass (₩3,000/month)**; the info and the map stay free. The test asks “Would you subscribe?” before trying and after booking, and nothing is charged. All owner replies are simulated in the browser. No restaurant is contacted and no payment happens.
+A Wizard-of-Oz prototype for the co-design workshop. Today is your anniversary, you forgot to book, your first choice in Ulsan is full and you can only walk. Pick nearby restaurants (who recommended them is shown), ask them all at once by Instagram DM or AI call, and **the first one to say Yes gets your booking**. Sending requests comes with **TrustMyChef Pass (₩3,000/month)**; the info and the map stay free. The test asks “Would you subscribe?” once, right after booking, and nothing is charged. All owner replies are simulated in the browser. No restaurant is contacted and no payment happens.
 
 ## Pages
 
@@ -10,7 +10,7 @@ A Wizard-of-Oz prototype for the co-design workshop. Today is your anniversary, 
 |---|---|
 | `/` | The prototype: 0 Situation → 1 Choose & send → 2 Wait → 3 Booked. Phones get the mobile app; wide screens (≥ 1100px) get the **presenter split view**: phone on the left, live “how it works” diagram + QR on the right. |
 | `/rate` | Phone survey (quantitative, 3–5 min with the prototype): consent + group (1, 2, 3, 4, Teaching) → about you → place 4 items on **one 2×2**: “How convenient is it?” × “Would you pay for it?” (1–10). Items: screen 1, screen 2, screen 3, the whole service with the Pass. Every question is required. |
-| `/results/` | Team dashboard (needs the results key). It re-reads the answers every 10 seconds (“Live”). Every answer is listed with the time it was recorded (KST) and can be deleted one by one (for test runs): the quadrant chart, means ± SD, share per quadrant, subscribe answers before → after (yes / maybe / no) and how they changed, profile breakdown, prototype behaviour, CSV export, delete all. Open as `/results/#key=YOUR_KEY` (the key is removed from the address bar after loading). |
+| `/results/` | Team dashboard (needs the results key). It re-reads the answers every 10 seconds (“Live”). Every answer is listed with the time it was recorded (KST) and can be deleted one by one (for test runs): the quadrant chart, means ± SD, share per quadrant, subscribe answers after booking (yes / maybe / no), profile breakdown, prototype behaviour, CSV export, delete all. Open as `/results/#key=YOUR_KEY` (the key is removed from the address bar after loading). |
 | `/board/` | Design board: research (Tabelog, Baemin, Coupang Eats), principles, tokens, grid, components, live screens, Wizard-of-Oz setup, validation plan, copy guide. |
 
 ## Running the workshop (no slides, just the big screen)
@@ -35,11 +35,11 @@ Before the real session, clear rehearsal answers with **Delete all** on the resu
 - **Real:** 38 walkable restaurants in Guyeong-ri and Samsan from the HeXA Ulsan Info catalog (`info.seonukkim.com/api/catalog`): names, photos, addresses and categories. “Who recommended it” comes from Gourmet notes (gourmet.seonukkim.com) and other source lists. Walking minutes and routes come from OSRM foot routing on OpenStreetMap.
 - **Simulated:** the first choice being full, owner replies and their timing, DMs, AI calls, the subscription (₩3,000/month, asked but never charged), the 10-minute table hold. Every simulated reply is labeled in the UI.
 
-The **subscribe popup** appears when someone taps “Send” (before trying) and again on the booking screen (after booking). The answer (yes / maybe / no) is saved, the popup says it is free for the experiment, and the flow always continues. The facilitator’s “Show a screen” buttons skip both popups so demos stay fast.
+The **subscribe popup** appears once, on the booking screen, every time someone gets a table (people have tried the idea by then, so the answer means more). The answer (yes / maybe / no) is saved, the popup says it is free for the experiment, and the flow always continues. The facilitator’s step buttons and Next skip it so demos stay fast.
 
 ## Data collected
 
-The survey collects only fields from our interview forms: gender, age (in full years), affiliation, meals out last month and apps used. It also stores the 1–10 ratings, the group (1, 2, 3, 4, Teaching), and what the person did in the prototype (places picked, DM vs AI call, subscribe answers before/after, result). Post-it ideas are not collected digitally. It stores no name, phone number or e-mail. Answers go to Cloudflare D1 (`trustmychef-sdf`) the moment a phone sends them, so nothing depends on the facilitator’s laptop staying open. If the internet drops, they wait on the phone and are sent later. Save a copy with **CSV · answers** on the results page; clear test answers with **Delete all** (or one row at a time).
+The survey collects only fields from our interview forms: gender, age (in full years), affiliation, meals out last month and apps used. It also stores the 1–10 ratings, the group (1, 2, 3, 4, Teaching), and what the person did in the prototype (places picked, DM vs AI call, subscribe answer after booking, result). Post-it ideas are not collected digitally. It stores no name, phone number or e-mail. Answers go to Cloudflare D1 (`trustmychef-sdf`) the moment a phone sends them, so nothing depends on the facilitator’s laptop staying open. If the internet drops, they wait on the phone and are sent later. Save a copy with **CSV · answers** on the results page; clear test answers with **Delete all** (or one row at a time).
 
 ## Files
 

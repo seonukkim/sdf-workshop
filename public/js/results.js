@@ -1,6 +1,6 @@
 // Facilitator dashboard (quantitative part): reads /api/responses with the results key and shows
 // ONE 2×2 matrix — How convenient is it? × Would you pay for it? (1–10) — for each screen and the whole
-// service, plus "Would you subscribe? ₩3,000/month" asked before trying and after booking (the sales point).
+// service, plus "Would you subscribe? ₩3,000/month", asked once right after booking (the sales point).
 // Post-it ideas are analysed on paper (affinity diagram).
 
 const T = {
@@ -11,7 +11,7 @@ const T = {
     chartA: 'How convenient × Would you pay (1–10)', showDots: 'Show every answer',
     behavior: 'What people did in the prototype', profile: 'Who answered',
     group: 'Group', gender: 'Gender', aff: 'Affiliation', age: 'Age', all: 'All', count: '{n} of {total} responses',
-    kResp: 'Responses', kTried: 'Tried the prototype', kSub: 'Would subscribe (Yes): before → after', kPay: 'Avg. “would pay” · whole service',
+    kResp: 'Responses', kTried: 'Tried the prototype', kSub: 'Would subscribe (Yes) · after booking', kPay: 'Avg. “would pay” · whole service',
     of: 'of {n}', item: 'Item', mx: 'Conv.', my: 'Pay', nn: 'n', spread: 'Answers by quadrant', byMean: 'Mean is in',
     S1: 'Screen 1 · Ask many places at once', S2: 'Screen 2 · The first Yes wins', S3: 'Screen 3 · Booking confirmed', S4: 'The whole service (Pass ₩3,000/mo)',
     mp: 'Worth paying for', np: 'Would pay, but not convenient', mf: 'Good, but should be free', nn2: 'Not useful',
@@ -39,7 +39,7 @@ const T = {
     chartA: '편리함 × 지불 의향 (1–10)', showDots: '개별 응답 보기',
     behavior: '프로토타입에서의 행동', profile: '응답자',
     group: '모둠', gender: '성별', aff: '소속', age: '나이', all: '전체', count: '응답 {total}개 중 {n}개',
-    kResp: '응답 수', kTried: '프로토타입 사용', kSub: '구독 의향(네): 써 보기 전 → 예약한 뒤', kPay: '서비스 전체 지불 의향 평균',
+    kResp: '응답 수', kTried: '프로토타입 사용', kSub: '구독 의향(네) · 예약한 뒤', kPay: '서비스 전체 지불 의향 평균',
     of: '{n}명 중', item: '항목', mx: '편리', my: '지불', nn: 'n', spread: '사분면별 응답', byMean: '평균 위치',
     S1: '화면 1 · 여러 곳에 한 번에 요청', S2: '화면 2 · 먼저 수락한 곳으로', S3: '화면 3 · 예약 확정', S4: '서비스 전체 (패스 월 ₩3,000)',
     mp: '돈 낼 만해요', np: '돈은 내겠지만 불편해요', mf: '좋지만 무료여야 해요', nn2: '필요 없어요',
@@ -205,15 +205,13 @@ function matrix({ means = [], dots = [], xLabel, yLabel, size = 440 }) {
 // ------------------------------------------------------------------ sections
 function kpis(rows) {
   const tried = rows.filter((r) => r.flow?.tried);
-  const pre = rows.filter((r) => r.flow?.subPre);
   const post = rows.filter((r) => r.flow?.subPost);
-  const yesPre = pre.filter((r) => r.flow.subPre === 'yes').length;
   const yesPost = post.filter((r) => r.flow.subPost === 'yes').length;
   const pay = rows.map((r) => r.ratings?.s4?.y).filter((v) => v != null);
   return [
     [t('kResp'), rows.length, ''],
     [t('kTried'), pct(tried.length, rows.length), t('of', { n: rows.length })],
-    [t('kSub'), `${pct(yesPre, pre.length)} → ${pct(yesPost, post.length)}`, `n ${pre.length} → ${post.length}`],
+    [t('kSub'), pct(yesPost, post.length), t('of', { n: post.length })],
     [t('kPay'), f1(mean(pay)), '/ 10'],
   ].map(([k, v, sub]) => `<div class="kpi"><small>${k}</small><b>${v}</b><span>${sub}</span></div>`).join('');
 }
@@ -255,13 +253,8 @@ function behaviorSection(rows) {
   const chooseMed = median(tried.map((r) => r.flow?.chooseSec).filter((v) => v != null));
   const yesMed = median(tried.map((r) => r.flow?.timeToYesSec).filter((v) => v != null));
   const ch = [['DM', tried.reduce((s, r) => s + (r.flow?.dm || 0), 0)], ['AI call', tried.reduce((s, r) => s + (r.flow?.call || 0), 0)]];
-  const score = { no: 0, maybe: 1, yes: 2 };
   const ans = (key) => countBy(rows.filter((r) => r.flow?.[key]), (r) => r.flow[key], ['yes', 'maybe', 'no']).map(([k, n]) => [t(k), n]);
-  const both = rows.filter((r) => r.flow?.subPre && r.flow?.subPost);
-  const shift = countBy(both, (r) => { const d = score[r.flow.subPost] - score[r.flow.subPre]; return d > 0 ? 'up' : d < 0 ? 'down' : 'same'; }, ['up', 'same', 'down']).map(([k, n]) => [t(k), n]);
-  $('#behavior').innerHTML = bars(t('bSubPre'), ans('subPre'), rows.filter((r) => r.flow?.subPre).length)
-    + bars(t('bSubPost'), ans('subPost'), rows.filter((r) => r.flow?.subPost).length)
-    + bars(t('bShift'), shift, both.length)
+  $('#behavior').innerHTML = bars(t('bSubPost'), ans('subPost'), rows.filter((r) => r.flow?.subPost).length)
     + bars(t('bResult'), res, rows.length) + bars('DM vs AI call (requests)', ch)
     + bars(t('bOutcome'), outc, tried.length)
     + `<table class="rs-t"><tbody><tr><td>${t('bSel')}</td><td class="num">${f1(sel)}</td></tr><tr><td>${t('bTime')}</td><td class="num">${chooseMed == null ? '–' : Math.round(chooseMed) + t('sec')}</td></tr><tr><td>${t('bYes')}</td><td class="num">${yesMed == null ? '–' : f1(yesMed) + t('sec')}</td></tr></tbody></table>`;
@@ -304,7 +297,7 @@ function listSection(rows) {
   const body = [...rows].reverse().map((r) => `<tr>
     <td class="num">${kst(r.createdAt)}</td><td>${esc(r.group === 'teaching' ? t('teaching') : r.group || '–')}</td>
     <td>${esc(r.profile?.gender ? t(r.profile.gender) : '–')}</td><td class="num">${r.profile?.age ?? '–'}</td>
-    <td>${subTxt(r.flow?.subPre)} → ${subTxt(r.flow?.subPost)}</td>
+    <td>${subTxt(r.flow?.subPost)}</td>
     <td class="num">${ITEMS.map((k) => `${r.ratings?.[k]?.x ?? '–'}/${r.ratings?.[k]?.y ?? '–'}`).join(' · ')}</td>
     <td><button class="btn btn-line btn-sm danger" data-del="${esc(r.id)}">${t('del')}</button></td></tr>`).join('');
   $('#list').innerHTML = rows.length
