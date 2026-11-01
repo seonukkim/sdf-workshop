@@ -10,12 +10,12 @@ A Wizard-of-Oz prototype for the co-design workshop. Today is your anniversary, 
 |---|---|
 | `/` | The prototype: 0 Situation → 1 Choose & send → 2 Wait → 3 Booked. Phones get the mobile app; wide screens (≥ 1100px) get the **presenter split view**: phone on the left, live “how it works” diagram + QR on the right. |
 | `/rate` | Phone survey (quantitative, 3–5 min with the prototype): consent + group (1, 2, 3, 4, Teaching) → about you → place 4 items on **one 2×2**: “How convenient is it?” × “Would you pay for it?” (1–10). Items: screen 1, screen 2, screen 3, the whole service with the Pass. Every question is required. |
-| `/results/` | Team dashboard (needs the results key). It re-reads the answers every 10 seconds (“Live”). Every answer is listed with the time it was recorded (KST) and can be deleted one by one (for test runs): the quadrant chart, means ± SD, share per quadrant, subscribe answers after booking (yes / maybe / no), profile breakdown, prototype behaviour, CSV export, delete all. Open as `/results/#key=YOUR_KEY` (the key is removed from the address bar after loading). |
+| `/results/` | Team dashboard (needs the results key every time the page loads). It re-reads the answers every 10 seconds (“Live”). It opens with **At a glance** (answers over time, subscribe after booking, average per screen, would-pay spread, time taken) and **Compare by** group, gender, age, affiliation, meals out and apps. Every answer is listed with the time it was recorded (KST) and can be ticked and deleted (for test runs): the quadrant chart, means ± SD, share per quadrant, subscribe answers after booking (yes / maybe / no), profile breakdown, prototype behaviour, CSV export, delete all. Open as `/results/#key=YOUR_KEY` (the key is removed from the address bar after loading). |
 | `/board/` | Design board: research (Tabelog, Baemin, Coupang Eats), principles, tokens, grid, components, live screens, Wizard-of-Oz setup, validation plan, copy guide. |
 
 ## Running the workshop (no slides, just the big screen)
 
-Open https://sdf.seonukkim.com on the 16:9 big screen (the PC). Wide screens show a fixed 16:9 canvas that scales to fill the screen: the phone on the left, the explanation on the right, a QR code, and **six step buttons** you can click at any time:
+Open **https://sdf.seonukkim.com/?fac=1** on the 16:9 big screen (the presenter PC). `?fac=1` makes that tab the facilitator: it stays on through reloads, and `?fac=0` turns it off. Wide screens show a fixed 16:9 canvas that scales to fill the screen: the phone on the left, the explanation on the right, a QR code, and **six step buttons** you can click at any time:
 
 | Step | What the big screen shows | Where answers come from |
 |---|---|---|
@@ -24,11 +24,11 @@ Open https://sdf.seonukkim.com on the 16:9 big screen (the PC). Wide screens sho
 | 4 Quant | Big QR + “try it, answer ‘Would you subscribe? ₩2,500/month’, rate each screen on one 2×2”. When a phone finishes, it says “Now look at the big screen”. | **Online**: each person’s phone (saved) |
 | 5 Qual | Guided paper part with a timer: ① ideas for each feature, with the Choose · Wait · Booked screens shown (7 min) → ② two “what if” questions (3 min) → ③ place the post-its on the A3 2×2, deciding together with your group (8 min) | **Offline**: A3 + post-its → photos → affinity diagram |
 
-The **floating toolbar** (bottom-right, outside the canvas) has: **Next screen** (walks everything without answers), Start over, **Results** (hidden until you click it; asks for the results key once), and the facilitator menu (What-if modes, speed, agenda, links, **Delete all answers**). The PC is always in **facilitator mode: nothing done on it is saved**. Participants should use phones.
+Only the facilitator tab shows the **floating toolbar** (below the canvas): **Next screen** (walks everything without answers), Start over, **Results** (hidden until you click it; asks for the results key), **Results page ↗**, and the facilitator menu (What-if modes, speed, agenda, links). There is no delete button on the big screen. **Nothing done in facilitator mode is saved.** Every other device, including laptops and tablets, is a participant: required answers are checked and saved.
 
 On a phone, the facilitator settings open by **pressing and holding the TEST badge**. URL switches also work: `?outcome=bad|none|normal`, `?speed=fast`, `?lang=en|ko`, `?at=guyeong|samsan`.
 
-Before the real session, clear rehearsal answers with **Delete all** on the results page.
+Before the real session, clear rehearsal answers on the results page (tick the top box, then **Delete selected**).
 
 ## What is real and what is simulated
 
@@ -39,7 +39,7 @@ The **subscribe popup** appears once, on the booking screen, every time someone 
 
 ## Data collected
 
-The survey collects only fields from our interview forms: gender, age (in full years), affiliation, meals out last month and apps used. It also stores the 1–10 ratings, the group (1, 2, 3, 4, Teaching), and what the person did in the prototype (places picked, DM vs AI call, subscribe answer after booking, result). Post-it ideas are not collected digitally. It stores no name, phone number or e-mail. Answers go to Cloudflare D1 (`trustmychef-sdf`) the moment a phone sends them, so nothing depends on the facilitator’s laptop staying open. If the internet drops, they wait on the phone and are sent later. Save a copy with **CSV · answers** on the results page; clear test answers with **Delete all** (or one row at a time).
+The survey collects only fields from our interview forms: gender, age (in full years), affiliation, meals out last month and apps used. It also stores the 1–10 ratings, the group (1, 2, 3, 4, Teaching), and what the person did in the prototype (places picked, DM vs AI call, subscribe answer after booking, result). Post-it ideas are not collected digitally. It stores no name, phone number or e-mail. Answers go to Cloudflare D1 (`trustmychef-sdf`) the moment a phone sends them, so nothing depends on the facilitator’s laptop staying open. If the internet drops, they wait on the phone and are sent later. On the results page, save a copy with **CSV** or **XLSX**, and clear test answers by ticking them (or the top box for all) and pressing **Delete selected**; a pop-up asks again first.
 
 ## Files
 
