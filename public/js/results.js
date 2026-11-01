@@ -5,7 +5,7 @@
 
 const T = {
   en: {
-    title: 'Workshop results', refresh: 'Refresh', csvResp: 'CSV · answers', wipe: 'Delete all',
+    title: 'Workshop results', refresh: 'Refresh', csvResp: 'CSV · answers', wipe: 'Delete all answers', lock: 'Lock',
     gateTitle: 'Enter the results key', gateBody: 'Only the team can see the answers.', open: 'Open', badKey: 'Wrong key. Try again.',
     netErr: 'Could not load. Check the internet and try again.',
     chartA: 'How convenient × Would you pay (1–10)', showDots: 'Show every answer',
@@ -33,7 +33,7 @@ const T = {
     live: 'Live · updated {t}', liveOff: 'Offline · retrying',
   },
   ko: {
-    title: '워크숍 결과', refresh: '새로고침', csvResp: 'CSV · 응답', wipe: '전체 삭제',
+    title: '워크숍 결과', refresh: '새로고침', csvResp: 'CSV · 응답', wipe: '응답 모두 삭제', lock: '잠그기',
     gateTitle: '결과 키를 입력하세요', gateBody: '팀원만 응답을 볼 수 있어요.', open: '열기', badKey: '키가 맞지 않아요.',
     netErr: '불러오지 못했어요. 인터넷 연결을 확인해 주세요.',
     chartA: '편리함 × 지불 의향 (1–10)', showDots: '개별 응답 보기',
@@ -97,15 +97,12 @@ const LIVE_MS = 10000;
 const F = { group: 'all', gender: 'all', aff: 'all', age: 'all' };
 
 // ------------------------------------------------------------------ key + load
+// the key lives only in memory, so a reload asks for it again; a #key=… link still opens directly once
 function readKey() {
+  try { sessionStorage.removeItem('tmc.key'); } catch { /* ignore */ }
   const m = location.hash.match(/key=([^&]+)/);
-  if (m) {
-    KEY = decodeURIComponent(m[1]);
-    try { sessionStorage.setItem('tmc.key', KEY); } catch { /* ignore */ }
-    history.replaceState(null, '', location.pathname);
-  } else {
-    try { KEY = sessionStorage.getItem('tmc.key'); } catch { KEY = null; }
-  }
+  KEY = m ? decodeURIComponent(m[1]) : null;
+  if (m) history.replaceState(null, '', location.pathname);
 }
 
 // answers are saved on the server (D1) the moment a phone submits; this page re-reads them every 10 s
@@ -114,12 +111,13 @@ async function load({ quiet = false } = {}) {
   if (!KEY) { showGate(); return; }
   try {
     const res = await fetch('/api/responses', { headers: { authorization: `Bearer ${KEY}` }, cache: 'no-store' });
-    if (res.status === 401) { try { sessionStorage.removeItem('tmc.key'); } catch { /* ignore */ } KEY = null; showGate(t('badKey')); return; }
+    if (res.status === 401) { KEY = null; showGate(t('badKey')); return; }
     if (!res.ok) throw new Error(res.status);
     const rows = (await res.json()).rows || [];
     const sig = rows.map((r) => `${r.id}:${r.updatedAt || r.createdAt}`).join(',');
     $('#gate').hidden = true;
     $('#dash').hidden = false;
+    document.body.classList.remove('rs-locked');
     if (!quiet || sig !== SIG) { SIG = sig; ROWS = rows; draw(); }
     liveStamp(true);
   } catch {
@@ -139,6 +137,8 @@ function liveStamp(ok) {
 }
 
 function showGate(err) {
+  clearTimeout(liveTimer);
+  document.body.classList.add('rs-locked');
   $('#dash').hidden = true;
   $('#gate').hidden = false;
   const e = $('#gate-err');
@@ -337,8 +337,12 @@ function csvAnswers() {
 $('#gate-form').addEventListener('submit', (e) => {
   e.preventDefault();
   KEY = $('#key').value.trim();
-  try { sessionStorage.setItem('tmc.key', KEY); } catch { /* ignore */ }
   load();
+});
+$('#lock').addEventListener('click', () => {
+  KEY = null; ROWS = []; SIG = '';
+  $('#key').value = '';
+  showGate();
 });
 $('#filters').addEventListener('change', (e) => {
   const s = e.target.closest('[data-f]');

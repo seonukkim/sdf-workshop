@@ -8,6 +8,11 @@ body.rs { background: var(--bg-3); height: auto; min-height: 100%; }
 .rs-live.off::before { background: var(--bad); animation: none; }
 @keyframes rs-pulse { 50% { opacity: .35; } }
 .rs-actions .danger { color: var(--bad); border-color: #F1C9CA; }
+.rs-actions .btn { gap: 6px; }
+.rs-wipe { background: var(--bad); border: 1px solid var(--bad); color: #fff; font-weight: 750; }
+.rs-wipe:hover { filter: brightness(.94); }
+/* until the key is entered: no live badge, refresh, CSV, lock or delete */
+body.rs-locked .rs-auth, body.rs-locked .rs-live { display: none; }
 .rs-main { max-width: 1240px; margin: 0 auto; padding: 20px 24px 60px; }
 .rs-gate { max-width: 420px; margin: 12vh auto 0; background: #fff; border: 1px solid var(--line); border-radius: var(--r-lg); padding: 24px; }
 .rs-gate form { display: flex; gap: 8px; margin-top: 14px; }
