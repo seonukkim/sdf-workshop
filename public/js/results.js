@@ -52,10 +52,10 @@ const T = {
   },
   ko: {
     title: '워크숍 결과', refresh: '새로고침', csvResp: 'CSV · 응답', wipe: '응답 모두 삭제', lock: '잠그기',
-    gateTitle: '결과 키를 입력하세요', gateBody: '팀원만 응답을 볼 수 있어요.', open: '열기', badKey: '키가 맞지 않아요.',
+    gateTitle: '결과 키를 입력하세요', gateBody: '팀원만 볼 수 있어요.', open: '열기', badKey: '키가 맞지 않아요.',
     netErr: '불러오지 못했어요. 인터넷 연결을 확인해 주세요.',
     chartA: '편리함 × 지불 의향 (1–10)', showDots: '개별 응답 보기',
-    behavior: '프로토타입에서의 행동', profile: '응답자',
+    behavior: '프로토타입에서 한 행동', profile: '응답자',
     group: '모둠', gender: '성별', aff: '소속', age: '나이', all: '전체', count: '응답 {total}개 중 {n}개',
     kResp: '응답 수', kTried: '프로토타입 사용', kSub: '구독 의향(네) · 예약한 뒤', kPay: '서비스 전체 지불 의향 평균',
     of: '{n}명 중', item: '항목', mx: '편리', my: '지불', nn: 'n', spread: '사분면별 응답', byMean: '평균 위치',
@@ -93,7 +93,7 @@ const T = {
     cmpTitle: '분류별 비교', groupN: '{n}모둠',
     cmpNote: '점 1–4 = 항목별 평균 (가로: 편리함, 세로: 지불 의향, 1–10). 앱은 여러 개 고를 수 있어서 한 사람이 여러 줄에 들어갈 수 있어요.',
     cCat: '분류', s1s: '화면 1', s2s: '화면 2', s3s: '화면 3', s4s: '서비스 전체', cQuad: '서비스 전체 위치',
-    cSub: '예약 뒤 구독', cCh: 'DM : AI 전화', cPick: '고른 곳', cYes: '첫 수락', subLine: '네 {y} · 글쎄요 {m} · 아니요 {n}',
+    cSub: '예약 뒤 구독', cCh: 'DM : AI 전화', cPick: '고른 곳', cYes: '첫 수락', subLine: '네 {y} · 잘 모르겠어요 {m} · 아니요 {n}',
   },
 };
 let lang = (localStorage.getItem('tmc.lang') || (navigator.language || '').slice(0, 2)) === 'ko' ? 'ko' : 'en';
