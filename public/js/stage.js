@@ -112,8 +112,7 @@ function menuHtml() {
     <div class="tb-grid">
       <div><h3>${bi('sideWhatIf')}</h3><div class="fac-opts">${opts}</div><h3>${bi('facSpeed')}</h3>${speed}</div>
       <div><h3>${bi('sideAgenda')}</h3><ol class="agenda">${agenda}</ol>
-        <h3>${bi('sideLinks')}</h3><div class="side-links"><a href="/rate">${en('linkRate')} →</a><a href="/results/" target="_blank" rel="noopener">${en('linkResults')} →</a><a href="/board/" target="_blank" rel="noopener">${en('linkBoard')} →</a></div>
-        <button class="btn btn-line btn-sm tb-danger" data-admin="reset">${icon('trash', 'sm')}${en('tbReset')}</button></div>
+        <h3>${bi('sideLinks')}</h3><div class="side-links"><a href="/rate">${en('linkRate')} →</a><a href="/results/" target="_blank" rel="noopener">${en('linkResults')} →</a><a href="/board/" target="_blank" rel="noopener">${en('linkBoard')} →</a></div></div>
     </div>`;
 }
 

@@ -351,7 +351,7 @@ export function openSubscribe(moment, onNext, { preview = false } = {}) {
       <p class="t-sub">${moment === 'post' ? t('subNextPost') : t('subNextPre')}</p>
       <p class="t-cap pass-test">${icon('info', 'xs')}${t('subFree')}</p>
     </div>
-    <button class="btn btn-primary btn-lg btn-block" data-act="next">${moment === 'post' ? t('subRate') : t('subContinue')}${icon('right')}</button>`;
+    <button class="btn btn-primary btn-lg btn-block" data-act="next">${t('subContinue')}${icon('right')}</button>`;
   wrap.innerHTML = `
     <div class="scrim"></div>
     <div class="sheet sub-sheet" role="dialog" aria-modal="true" aria-label="${esc(t('subQ'))}">
@@ -713,7 +713,7 @@ export function booked() {
     });
     // the subscribe question, after they have seen the value (skipped for previews and presenter jumps)
     const subTimer = !params.shot && !jumped
-      ? setTimeout(() => openSubscribe('post', () => go('/rate')), 1400) : null;
+      ? setTimeout(() => openSubscribe('post', null), 1400) : null; // after the answer they stay on the booking
     jumped = false;
     return () => { clearInterval(tick); clearTimeout(subTimer); map && map.destroy(); };
   });
