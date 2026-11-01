@@ -508,7 +508,6 @@ function logHtml(st) {
 export function wait() {
   if (!S.match) { go('/choose', { replace: true }); return; }
   const st = S.match.state;
-  let autoTimer = null;
   let tick = null;
   const banner = () => t('bookedBanner', { name: esc(placeName(st.winner)), iga: josa(placeName(st.winner), '이', '가') });
   const title = () => (st.result === 'booked' ? banner()
@@ -568,7 +567,7 @@ export function wait() {
         $('#w-dock', root).innerHTML = dockInner();
         root.querySelector('.steps').outerHTML = stepsHtml(st.result === 'booked' ? 3 : 2);
         recordResult();
-        if (st.result === 'booked' && !params.shot) autoTimer = setTimeout(() => go('/booked'), 3600);
+        // no automatic jump: people stay to see who said Yes, then tap "See my booking"
         lastResult = st.result;
       }
     };
@@ -607,7 +606,6 @@ export function wait() {
     return () => {
       window.removeEventListener('tmc:match', onMatch);
       clearInterval(tick);
-      clearTimeout(autoTimer);
     };
   });
 }
