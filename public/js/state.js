@@ -41,7 +41,7 @@ export const S = {
   match: null,           // running simulation (see sim.js)
   booking: null,
   subSheet: null,        // 'pre' | 'post' while the subscribe popup is open (the presenter view highlights it)
-  admin: false,          // PC presenter view = facilitator mode: steps can be skipped and nothing is sent to the results
+  admin: false,          // facilitator mode (presenter PC opened with ?fac=1): steps can be skipped, nothing is sent
   qual: 0,               // Qual (offline post-it) guide: 0 write · 1 what if · 2 A3 2×2 · 3 discuss
   // what the participant did in the prototype; kept on the phone so a later visit to /rate still has it
   flow: { ...newFlow(), ...lsGet('tmc.flow', {}) },

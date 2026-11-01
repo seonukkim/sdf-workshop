@@ -5,7 +5,10 @@
 // and every block in it spans whole columns (see app.css). Add ?grid=1 to the address to see the lines.
 // Six steps: 0 Situation · 1 Choose · 2 Wait · 3 Booked · 4 Quant (rate on phones, online, 5 min) · 5 Qual (A3 +
 // post-its, offline, three timed parts). It listens to app events and never drives the simulation itself.
-// Copy is English first with Korean as a quieter second line. Facilitator mode: nothing here is saved.
+// Copy is English first with Korean as a quieter second line.
+// Facilitator mode is only the presenter PC, opened with ?fac=1 (kept for that tab; ?fac=0 ends it): it shows
+// the toolbar, can skip anything and never saves answers. Every other screen, phone or laptop, is a participant
+// whose answers are saved.
 
 import { S, params, scenario, place, cand, trust, resetPerson } from './state.js';
 import { STR, fill } from './i18n.js';
@@ -17,6 +20,16 @@ import { go } from './nav.js';
 const WIDE = window.matchMedia('(min-width: 1100px)');
 const CANVAS = { w: 1600, h: 900 };
 const GRID = new URLSearchParams(location.search).get('grid') === '1'; // layout check: column and row lines
+const FAC = (() => {
+  const v = new URLSearchParams(location.search).get('fac');
+  try {
+    if (v === '1') sessionStorage.setItem('tmc.facilitator', '1');
+    if (v === '0') sessionStorage.removeItem('tmc.facilitator');
+    return sessionStorage.getItem('tmc.facilitator') === '1';
+  } catch {
+    return v === '1';
+  }
+})();
 const GAP = 18;          // gutter, and the space between blocks
 const BODY_H = 586;      // content 648 − top line 44 − 18
 const ROW_MAX = 116;     // tallest row of the hub diagram
@@ -59,14 +72,14 @@ function scaleStage() {
 export function initStage() {
   const el = document.getElementById('side');
   if (!el || params.shot) return;
-  // the wide presenter view is the facilitator's PC: skippable, never saved
-  S.admin = WIDE.matches;
+  // only the presenter PC (?fac=1) is the facilitator: skippable, never saved. A wide screen alone is not.
+  S.admin = FAC;
   scaleStage();
   window.addEventListener('resize', () => { scaleStage(); fit(); });
   document.fonts?.ready.then(fit);
   window.addEventListener('tmc:route', (e) => { route = e.detail || location.pathname; paint(); });
   ['tmc:select', 'tmc:match', 'tmc:fac'].forEach((n) => window.addEventListener(n, paintLive));
-  WIDE.addEventListener('change', () => { S.admin = WIDE.matches; scaleStage(); paint(); });
+  WIDE.addEventListener('change', () => { scaleStage(); paint(); });
   const onClick = (e) => {
     if (onFacClick(e, () => { paintLive(); toolbar(); })) return;
     const step = e.target.closest('[data-step]');
@@ -101,7 +114,7 @@ export function initStage() {
 function toolbar() {
   const bar = document.getElementById('pv-toolbar');
   if (!bar) return;
-  if (!WIDE.matches) { bar.innerHTML = ''; return; }
+  if (!WIDE.matches || !S.admin) { bar.innerHTML = ''; return; } // the toolbar is the facilitator's only
   const menu = document.getElementById('pv-menu');
   const open = menu ? !menu.hasAttribute('hidden') : false;
   bar.innerHTML = `

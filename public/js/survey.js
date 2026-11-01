@@ -3,8 +3,9 @@
 // Post-it ideas are collected on paper for the affinity diagram, so they are not asked here.
 // Profile fields mirror what the team already collected in the interview forms (gender, age, affiliation,
 // meals out, apps). No name, phone or e-mail is asked. Every question is required: the survey's own buttons
-// always check them, on any screen size. Facilitator mode (the PC presenter view, S.admin) never sends
-// answers, and only its toolbar "Next screen" (adminAdvance) moves on without them.
+// always check them, on any screen size. Facilitator mode (S.admin: the presenter PC opened with ?fac=1) never
+// sends answers, and only its toolbar "Next screen" (adminAdvance) moves on without them. Laptops and tablets
+// without ?fac=1 are participants and their answers are saved.
 
 import { S, t, lsGet, lsSet, setLang, resetPerson } from './state.js';
 import { esc, icon, $, $$, uid, quadrant, QUAD_KEY, toast } from './util.js';
