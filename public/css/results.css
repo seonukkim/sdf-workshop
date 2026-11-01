@@ -36,7 +36,7 @@ body.rs-locked .rs-auth, body.rs-locked .rs-live { display: none; }
 .ov-legend span { display: inline-flex; align-items: center; gap: 4px; }
 .ov-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; }
 .ov-legend i.tick { width: 2.5px; height: 14px; border-radius: 2px; background: var(--ink); }
-.ov-legend i.dot { width: 9px; height: 9px; border-radius: 50%; background: #6F6862; opacity: .6; }
+.ov-legend i.dot { width: 9px; height: 9px; border-radius: 50%; background: #C9C4BE; }
 .ov-legend small { color: var(--ink-3); }
 .ov-empty { padding: 28px; text-align: center; color: var(--ink-3); font-size: 13px; }
 #ov-time svg { cursor: crosshair; }
@@ -55,8 +55,8 @@ body.rs-locked .rs-auth, body.rs-locked .rs-live { display: none; }
 .cmp-card svg { width: 100%; height: auto; display: block; }
 .subbar { display: flex; gap: 2px; height: 8px; border-radius: 4px; overflow: hidden; min-width: 90px; }
 .subbar i { display: block; height: 100%; }
-/* subscribe answers are ordered: orange yes · light orange maybe · warm gray no (same colours in every chart) */
-.sb-yes { background: #E6550D; } .sb-maybe { background: #F59A57; } .sb-no { background: #A8A29E; }
+/* subscribe answers: soft orange yes · butter yellow maybe · light gray no (same pastel colours in every chart) */
+.sb-yes { background: #FFA36C; } .sb-maybe { background: #FFD66B; } .sb-no { background: #E3E1DE; }
 .ov-split { display: grid; gap: 10px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
 .ov-split-row { display: grid; grid-template-columns: 92px 1fr; gap: 4px 12px; align-items: center; font-size: 13px; font-weight: 700; color: var(--ink-2); }
 .ov-split-row small { grid-column: 2; margin-top: -2px; }
@@ -96,13 +96,13 @@ table.rs-t { width: 100%; border-collapse: collapse; font-size: 13.5px; }
 .rs-t .lbl { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--brand-strong); color: #fff; font-size: 11.5px; font-weight: 800; margin-right: 6px; }
 .qbar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; background: var(--bg-2); min-width: 120px; }
 .qbar i { display: block; height: 100%; }
-.q-mp-bg { background: #E6550D; } .q-np-bg { background: #9A3412; } .q-mf-bg { background: #F59A57; } .q-nn-bg { background: #D6D3D1; }
+.q-mp-bg { background: #FFA36C; } .q-np-bg { background: #FFC2B0; } .q-mf-bg { background: #FFD66B; } .q-nn-bg { background: #E3E1DE; }
 .qbar { gap: 2px; }
 .qtag { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 6px; font-size: 11.5px; font-weight: 750; white-space: nowrap; }
-.qtag.mp { background: #FDD9C2; color: #7C2D12; }
-.qtag.np { background: #EFDCCF; color: #5B2A12; }
-.qtag.mf { background: #FFEBD9; color: #8A4A12; }
-.qtag.nn { background: #EEECE9; color: #57534E; }
+.qtag.mp { background: #FFE2D0; color: #1C1A19; }
+.qtag.np { background: #FFE7E0; color: #1C1A19; }
+.qtag.mf { background: #FFF1C2; color: #1C1A19; }
+.qtag.nn { background: #EFEDEA; color: #57534E; }
 .rs-legend { display: flex; gap: 10px; flex-wrap: wrap; font-size: 12.5px; color: var(--ink-2); }
 .rs-legend span { display: inline-flex; align-items: center; gap: 5px; }
 .rs-legend i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }

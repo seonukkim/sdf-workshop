@@ -106,11 +106,12 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '
 const $ = (s) => document.querySelector(s);
 
 const ITEMS = ['s1', 's2', 's3', 's4'];
-// one warm family for every chart: ColorBrewer "Oranges" steps + warm stone grays (checked with the dataviz validator)
-const QCOLOR = { mp: '#E6550D', np: '#9A3412', mf: '#F59A57', nn: '#A8A29E' };
-const QTINT = { mp: '#FEEDDE', np: '#F5E8E0', mf: '#FFF7EF', nn: '#FAFAF9' };
-// numbers inside a dot: white on the dark steps, ink on the light ones
-const onFill = (c) => (['#F59A57', '#A8A29E'].includes(c) ? '#1C1A19' : '#fff');
+// pastel, orange-led palette (post-it tones): soft orange, butter yellow, peach, light warm gray.
+// Light fills are never the only cue: values are printed in ink next to every mark and the tables repeat them.
+const QCOLOR = { mp: '#FFA36C', np: '#FFC2B0', mf: '#FFD66B', nn: '#E3E1DE' };
+const QTINT = { mp: '#FFF0E6', np: '#FFF3F0', mf: '#FFF8E1', nn: '#F8F7F6' };
+// numbers inside a dot: ink on pastel fills
+const onFill = () => '#1C1A19';
 const quad = (x, y) => (x == null || y == null ? null : x >= 6 ? (y >= 6 ? 'mp' : 'mf') : (y >= 6 ? 'np' : 'nn'));
 const qName = (q) => t(q === 'nn' ? 'nn2' : q);
 const mean = (a) => (a.length ? a.reduce((s, v) => s + v, 0) / a.length : null);
@@ -407,11 +408,10 @@ function compareSection(rows) {
 }
 
 // ------------------------------------------------------------------ at a glance
-// All warm: brand orange = the money side (would pay, subscribe yes), deep orange = convenient (pair passes the
-// dataviz validator: CVD ΔE 14.8, normal ΔE 17.4, contrast ≥ 3:1). Subscribe answers are ordered: orange yes · light
-// orange maybe · warm gray no.
+// Pastel and warm: soft orange = the money side (would pay, subscribe yes), butter yellow = convenient / maybe,
+// light warm gray = no or low. Every mark also carries its value in ink, so the light fills never stand alone.
 // Thin marks, hairline solid grid, values at bar tips, tooltips on hover and focus.
-const VC = { pay: '#E6550D', payFill: 'rgba(230, 85, 13, .14)', conv: '#9A3412', yes: '#E6550D', maybe: '#F59A57', no: '#A8A29E', low: '#D6D3D1', grid: '#ECE8E2', axis: '#8A827B', ink: '#1C1A19', ink2: '#5B5550', dot: '#78716C' };
+const VC = { pay: '#FFA36C', line: '#FF8A4C', payFill: 'rgba(255, 163, 108, .28)', conv: '#FFD66B', yes: '#FFA36C', maybe: '#FFD66B', no: '#E3E1DE', low: '#E9E6E2', grid: '#ECE8E2', axis: '#8A827B', ink: '#1C1A19', ink2: '#5B5550', dot: '#C9C4BE' };
 const FONT = 'font-family="Pretendard Variable, sans-serif"';
 const tipAttr = (s) => `data-tip="${esc(s)}" tabindex="0" aria-label="${esc(s)}"`;
 const clock = (ms, sec) => new Date(ms).toLocaleTimeString('sv-SE', { timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit', ...(sec ? { second: '2-digit' } : {}) });
@@ -454,10 +454,10 @@ function timelineChart(rows) {
   // a running total stays flat until the next answer arrives, so the line steps (no false slope between answers)
   const line = pts.map((p, i) => (i ? `H${X(p.t).toFixed(1)} V${Y(i + 1).toFixed(1)}` : `M${X(p.t).toFixed(1)},${Y(1).toFixed(1)}`)).join(' ');
   s += `<path d="M${X(first).toFixed(1)},${Y(0)} ${line.replace(/^M/, 'L')} V${Y(0)} Z" fill="${VC.payFill}"/>`;
-  s += `<path d="${line}" fill="none" stroke="${VC.pay}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
-  if (n <= 80) pts.forEach((p, i) => { s += `<circle cx="${X(p.t).toFixed(1)}" cy="${Y(i + 1).toFixed(1)}" r="4" fill="${VC.pay}" stroke="#fff" stroke-width="2"/>`; });
+  s += `<path d="${line}" fill="none" stroke="${VC.line}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`;
+  if (n <= 80) pts.forEach((p, i) => { s += `<circle cx="${X(p.t).toFixed(1)}" cy="${Y(i + 1).toFixed(1)}" r="4" fill="${VC.line}" stroke="#fff" stroke-width="2"/>`; });
   s += `<text x="${X(last) + 10}" y="${Y(n) + 4}" font-size="13" font-weight="800" fill="${VC.ink}">${n}</text>`;
-  s += `<line class="tl-cross" x1="0" x2="0" y1="${T}" y2="${H - B}" stroke="${VC.ink2}" visibility="hidden"/><circle class="tl-dot" r="6" fill="${VC.pay}" stroke="#fff" stroke-width="2" visibility="hidden"/>`;
+  s += `<line class="tl-cross" x1="0" x2="0" y1="${T}" y2="${H - B}" stroke="${VC.ink2}" visibility="hidden"/><circle class="tl-dot" r="6" fill="${VC.line}" stroke="#fff" stroke-width="2" visibility="hidden"/>`;
   s += `<rect class="tl-hit" x="${L}" y="${T}" width="${W - L - R}" height="${H - T - B}" fill="transparent"/>`;
   TL = { pts, W, L, R, X, Y };
   return s + '</svg>';
@@ -573,7 +573,7 @@ function durationChart(rows) {
     s += `<text x="${L}" y="${y + 26}" font-size="11.5" fill="${VC.axis}">0</text><text x="${W - R}" y="${y + 26}" font-size="11.5" fill="${VC.axis}" text-anchor="end">${max}${t('sec')}</text>`;
     vals.forEach((v, i) => {
       const jy = ((i * 37) % 9) - 4;
-      s += `<circle cx="${X(v).toFixed(1)}" cy="${y + jy}" r="4.5" fill="${VC.dot}" fill-opacity=".55" stroke="#fff" stroke-width="2" ${tipAttr(`${v}${t('sec')} · ${t(k)}`)}/>`;
+      s += `<circle cx="${X(v).toFixed(1)}" cy="${y + jy}" r="4.5" fill="${VC.dot}" stroke="#fff" stroke-width="2" ${tipAttr(`${v}${t('sec')} · ${t(k)}`)}/>`;
     });
     const md = median(vals);
     s += `<line x1="${X(md)}" x2="${X(md)}" y1="${y - 12}" y2="${y + 12}" stroke="${VC.ink}" stroke-width="2.5" stroke-linecap="round"/>`;
