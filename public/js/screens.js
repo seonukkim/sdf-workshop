@@ -306,11 +306,11 @@ export function startMatch() {
 }
 
 // ------------------------------------------------------------------ subscribe question (₩2,500/month)
-// Asked once, right after every booking ('post'): by then people have tried the idea, so the answer means
-// something. It is an experiment: the answer is recorded (the last one counts), nothing is charged, and the
-// flow always continues. The popup cannot be dismissed without an answer.
+// Asked when people tap "Next: Rate this test" on their booking ('post'), not as a sudden pop-up: by then they
+// have tried the idea, so the answer means something. It says plainly that it is a test (nothing is charged);
+// the answer is recorded (the last one counts) and they go straight on to the rating. "Back to my booking"
+// closes it without an answer.
 let subNext = null;
-let jumped = false; // the presenter jumped straight to Booked: no popup for that visit
 export function skipSubscribe() {
   const w = app().querySelector('.sub-sheet')?.parentElement;
   if (!w) return false;
@@ -331,44 +331,39 @@ export function openSubscribe(moment, onNext, { preview = false } = {}) {
   S.subSheet = moment;
   emit('select');
   const wrap = document.createElement('div');
-  const question = () => `
-    <div class="pass-card">
-      <span class="pass-tag">${icon('star', 'xs')}${t('subName')}</span>
-      <h2 class="h-title">${moment === 'post' ? t('subQPost', { s: secs }) : t('subQ')}</h2>
-      <p class="t-sub">${t('subBody')}</p>
-      <div class="pass-price"><b>${t('subPrice')}</b><span>${t('subPer')}</span></div>
-      <p class="sub-free">${icon('info', 'xs')}${t('subFree')}</p>
-    </div>
-    <div class="sub-answers" role="group" aria-label="${esc(t('subQ'))}">
-      <button class="btn btn-primary btn-lg btn-block" data-ans="yes">${t('subYes')}</button>
-      <button class="btn btn-line btn-lg btn-block" data-ans="maybe">${t('subMaybe')}</button>
-      <button class="btn btn-line btn-lg btn-block" data-ans="no">${t('subNo')}</button>
-    </div>`;
-  const after = () => `
-    <div class="sub-done">
-      <div class="check-pop">${icon('check')}</div>
-      <h2 class="h-title">${t('subThanks')}</h2>
-      <p class="t-sub">${moment === 'post' ? t('subNextPost') : t('subNextPre')}</p>
-      <p class="t-cap pass-test">${icon('info', 'xs')}${t('subFree')}</p>
-    </div>
-    <button class="btn btn-primary btn-lg btn-block" data-act="next">${t('subContinue')}${icon('right')}</button>`;
   wrap.innerHTML = `
     <div class="scrim"></div>
     <div class="sheet sub-sheet" role="dialog" aria-modal="true" aria-label="${esc(t('subQ'))}">
       <div class="grab"></div>
-      <div class="sheet-body sub-body">${question()}</div>
+      <div class="sheet-body sub-body">
+        <p class="sub-kicker">${t('subAsk')}</p>
+        <div class="pass-card">
+          <span class="pass-tag">${icon('star', 'xs')}${t('subName')}</span>
+          <h2 class="h-title">${t('subQPost')}</h2>
+          <p class="t-sub">${t('subBodyPost', { s: secs })}</p>
+          <div class="pass-price"><b>${t('subPrice')}</b><span>${t('subPer')}</span></div>
+          <p class="sub-free">${icon('info', 'xs')}${t('subFree')}</p>
+        </div>
+        <div class="sub-answers" role="group" aria-label="${esc(t('subQ'))}">
+          <button class="btn btn-primary btn-lg btn-block" data-ans="yes">${t('subYes')}</button>
+          <button class="btn btn-line btn-lg btn-block" data-ans="maybe">${t('subMaybe')}</button>
+          <button class="btn btn-line btn-lg btn-block" data-ans="no">${t('subNo')}</button>
+        </div>
+        <button class="sub-back" data-act="back">${icon('left', 'sm')}${t('subBack')}</button>
+      </div>
     </div>`;
   app().appendChild(wrap);
   wrap.addEventListener('click', (e) => {
+    if (preview) return;
     const ans = e.target.closest('[data-ans]');
-    if (ans && !preview) {
+    if (ans) {
       f[moment === 'post' ? 'subPost' : 'subPre'] = ans.dataset.ans;
       saveFlow();
       emit('select');
-      wrap.querySelector('.sub-body').innerHTML = after();
+      skipSubscribe(); // answered: close and go on (to the rating)
       return;
     }
-    if (e.target.closest('[data-act="next"]')) skipSubscribe();
+    if (e.target.closest('[data-act="back"]')) { subNext = null; skipSubscribe(); } // stay on the booking, no answer
   });
 }
 
@@ -707,13 +702,10 @@ export function booked() {
       if (!a) return;
       if (a.dataset.act === 'lang') onLang(booked);
       if (a.dataset.act === 'restart') { resetFlow(); go('/'); }
-      if (a.dataset.act === 'rate') go('/rate');
+      // the subscribe question comes when they choose to move on, then the rating
+      if (a.dataset.act === 'rate') openSubscribe('post', () => go('/rate'));
     });
-    // the subscribe question, after they have seen the value (skipped for previews and presenter jumps)
-    const subTimer = !params.shot && !jumped
-      ? setTimeout(() => openSubscribe('post', null), 1400) : null; // after the answer they stay on the booking
-    jumped = false;
-    return () => { clearInterval(tick); clearTimeout(subTimer); map && map.destroy(); };
+    return () => { clearInterval(tick); map && map.destroy(); };
   });
 }
 
@@ -800,7 +792,6 @@ export function jumpTo(step) {
     if (S.match) S.match.stop();
     S.match = frozenMatch({ items, party: S.party, when: S.when, mode: 'booked' });
     S.flow.tried = true;
-    jumped = true;
     go('/booked');
   }
 }

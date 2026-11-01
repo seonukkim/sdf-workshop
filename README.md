@@ -2,7 +2,7 @@
 
 **Live:** https://sdf.seonukkim.com · **Repo:** https://github.com/seonukkim/sdf-workshop · SDF26F Team B (Service Design Fundamentals, UNIST)
 
-A Wizard-of-Oz prototype for the co-design workshop. Today is your anniversary, you forgot to book, your first choice in Ulsan is full and you can only walk. Pick nearby restaurants (who recommended them is shown), ask them all at once by Instagram DM or AI call, and **the first one to say Yes gets your booking**. Sending requests comes with **TrustMyChef Pass (₩2,500/month)**; the info and the map stay free. The test asks “Would you subscribe?” once, right after booking, and nothing is charged. All owner replies are simulated in the browser. No restaurant is contacted and no payment happens.
+A Wizard-of-Oz prototype for the co-design workshop. Today is your anniversary, you forgot to book, your first choice in Ulsan is full and you can only walk. Pick nearby restaurants (who recommended them is shown), ask them all at once by Instagram DM or AI call, and **the first one to say Yes gets your booking**. Sending requests comes with **TrustMyChef Pass (₩2,500/month)**; the info and the map stay free. The test asks “Would you subscribe?” after booking, when people move on to the rating, and nothing is charged. All owner replies are simulated in the browser. No restaurant is contacted and no payment happens.
 
 ## Pages
 
@@ -35,7 +35,7 @@ Before the real session, clear rehearsal answers on the results page (tick the t
 - **Real:** 38 walkable restaurants in Guyeong-ri and Samsan from the HeXA Ulsan Info catalog (`info.seonukkim.com/api/catalog`): names, photos, addresses and categories. “Who recommended it” comes from Gourmet notes (gourmet.seonukkim.com) and other source lists. Walking minutes and routes come from OSRM foot routing on OpenStreetMap.
 - **Simulated:** the first choice being full, owner replies and their timing, DMs, AI calls, the subscription (₩2,500/month, asked but never charged), the 10-minute table hold. Every simulated reply is labeled in the UI.
 
-The **subscribe popup** appears once, on the booking screen, every time someone gets a table (people have tried the idea by then, so the answer means more). The answer (yes / maybe / no) is saved, the popup says it is free for the experiment, and the flow always continues. The facilitator’s step buttons and Next skip it so demos stay fast.
+The **subscribe question** comes when someone taps **Next: Rate this test** on their booking (not as a sudden pop-up): “One quick question before you rate · Would you subscribe to this? ₩2,500/month”. It says it is only a test (nothing is charged) and asks them to answer as if it were real. The answer (yes / not sure / no) is saved and they go straight on to the rating; “Back to my booking” closes it without an answer. The facilitator toolbar’s Next skips it so demos stay fast.
 
 ## Data collected
 
