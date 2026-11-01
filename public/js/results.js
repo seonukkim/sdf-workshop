@@ -2,6 +2,7 @@
 // ONE 2×2 matrix — How convenient is it? × Would you pay for it? (1–10) — for each screen and the whole
 // service, plus "Would you subscribe? ₩3,000/month", asked once right after booking (the sales point).
 // Post-it ideas are analysed on paper (affinity diagram).
+import { makeXlsx } from './xlsx.js';
 
 const T = {
   en: {
@@ -27,10 +28,18 @@ const T = {
     female: 'Female', male: 'Male', other: 'Other', na: 'Prefer not to say', undergrad: 'Undergraduate', grad: 'Graduate student', intl: 'International student', worker: 'Office worker',
     naver: 'Naver Map', kakao: 'KakaoMap', google: 'Google Maps', instagram: 'Instagram', catchtable: 'Catch Table', youtube: 'YouTube',
     ageStats: 'n {n} · mean {m} · median {md} · range {lo}–{hi}', unknown: 'No answer',
-    wipeAsk: 'This deletes ALL responses. Type DELETE to confirm.', wiped: 'All responses deleted.',
+    wiped: 'All answers deleted.',
     midNote: 'Scale 1–10. 6 or more counts as high. Big dots = averages; small dots = single answers.',
     sec: 's',
     live: 'Live · updated {t}', liveOff: 'Offline · retrying',
+    xlsx: 'XLSX · all', cancel: 'Cancel',
+    wipeTitle: 'Delete all {n} answers?', wipeOk: 'Delete all {n}',
+    wipeBody: 'This removes every answer on the server, not only the filtered ones. It cannot be undone. Download CSV or XLSX first if you need a copy.',
+    delTitle: 'Delete this answer?', delBody: 'Recorded {time} · group {g}. It cannot be undone.', deleted: 'Answer deleted.',
+    cmpTitle: 'Compare by', groupN: 'Group {n}',
+    cmpNote: 'Dots 1–4 = the average of each item (x: How convenient, y: Would pay, 1–10). People can pick several apps, so one person can be in more than one app row.',
+    cCat: 'Category', s1s: 'Screen 1', s2s: 'Screen 2', s3s: 'Screen 3', s4s: 'Whole service', cQuad: 'Whole service is in',
+    cSub: 'Subscribe after booking', cCh: 'DM : AI call', cPick: 'Places picked', cYes: 'First Yes', subLine: 'Yes {y} · Maybe {m} · No {n}',
   },
   ko: {
     title: '워크숍 결과', refresh: '새로고침', csvResp: 'CSV · 응답', wipe: '응답 모두 삭제', lock: '잠그기',
@@ -55,10 +64,18 @@ const T = {
     female: '여성', male: '남성', other: '그 외', na: '답하지 않음', undergrad: '학부생', grad: '대학원생', intl: '국제학생', worker: '직장인',
     naver: '네이버 지도', kakao: '카카오맵', google: '구글 지도', instagram: '인스타그램', catchtable: '캐치테이블', youtube: '유튜브',
     ageStats: 'n {n} · 평균 {m} · 중앙값 {md} · 범위 {lo}–{hi}', unknown: '무응답',
-    wipeAsk: '모든 응답이 삭제돼요. 확인하려면 DELETE 를 입력하세요.', wiped: '모든 응답을 삭제했어요.',
+    wiped: '모든 응답을 지웠어요.',
     midNote: '1–10점 척도. 6점 이상을 높음으로 봐요. 큰 점 = 평균, 작은 점 = 개별 응답.',
     sec: '초',
     live: '실시간 · {t} 갱신', liveOff: '연결 끊김 · 다시 시도 중',
+    xlsx: 'XLSX · 전체', cancel: '취소',
+    wipeTitle: '응답 {n}개를 모두 지울까요?', wipeOk: '{n}개 모두 삭제',
+    wipeBody: '필터와 상관없이 서버에 있는 모든 응답이 지워지고, 되돌릴 수 없어요. 필요하면 먼저 CSV나 XLSX로 받아 두세요.',
+    delTitle: '이 응답을 지울까요?', delBody: '{time} 기록 · 모둠 {g}. 되돌릴 수 없어요.', deleted: '응답을 지웠어요.',
+    cmpTitle: '분류별 비교', groupN: '{n}모둠',
+    cmpNote: '점 1–4 = 항목별 평균 (가로: 편리함, 세로: 지불 의향, 1–10). 앱은 여러 개 고를 수 있어서 한 사람이 여러 줄에 들어갈 수 있어요.',
+    cCat: '분류', s1s: '화면 1', s2s: '화면 2', s3s: '화면 3', s4s: '서비스 전체', cQuad: '서비스 전체 위치',
+    cSub: '예약 뒤 구독', cCh: 'DM : AI 전화', cPick: '고른 곳', cYes: '첫 수락', subLine: '네 {y} · 글쎄요 {m} · 아니요 {n}',
   },
 };
 let lang = (localStorage.getItem('tmc.lang') || (navigator.language || '').slice(0, 2)) === 'ko' ? 'ko' : 'en';
@@ -273,6 +290,100 @@ function profileSection(rows) {
     + bars(t('pAff'), a, n) + bars(t('pMeals'), me, n) + bars(t('pApps'), ap, n);
 }
 
+// ------------------------------------------------------------------ compare by category
+// every value of one profile field side by side: a small 2×2 of the four item averages, then a table
+const DIMS = {
+  group: { label: 'group', sheet: 'group', key: (r) => [r.group || 'unknown'], order: ['1', '2', '3', '4', 'teaching', 'unknown'], fmt: (v) => (v === 'teaching' ? t('teaching') : v === 'unknown' ? t('unknown') : t('groupN', { n: v })) },
+  gender: { label: 'gender', sheet: 'gender', key: (r) => [r.profile?.gender || 'unknown'], order: ['female', 'male', 'other', 'na', 'unknown'], fmt: (v) => t(v) },
+  age: { label: 'age', sheet: 'age', key: (r) => [ageBand(r.profile?.age)], order: ['<20', '20–24', '25–29', '30+', 'unknown'], fmt: (v) => (v === 'unknown' ? t('unknown') : v) },
+  aff: { label: 'aff', sheet: 'affiliation', key: (r) => [r.profile?.affiliation || 'unknown'], order: ['undergrad', 'grad', 'intl', 'worker', 'other', 'unknown'], fmt: (v) => t(v) },
+  meals: { label: 'pMeals', sheet: 'meals out', key: (r) => [r.profile?.mealsOut || 'unknown'], order: ['0-3', '4-7', '8-15', '16+', 'unknown'], fmt: (v) => (v === 'unknown' ? t('unknown') : v) },
+  apps: { label: 'pApps', sheet: 'app', key: (r) => (r.profile?.apps?.length ? r.profile.apps : ['unknown']), order: ['naver', 'kakao', 'google', 'instagram', 'catchtable', 'youtube', 'other', 'unknown'], fmt: (v) => t(v) },
+};
+let CMP = 'group';
+
+function groupsBy(rows, dim) {
+  const d = DIMS[dim];
+  const m = new Map();
+  rows.forEach((r) => d.key(r).forEach((v) => { if (!m.has(v)) m.set(v, []); m.get(v).push(r); }));
+  const keys = d.order.filter((k) => m.has(k)).concat([...m.keys()].filter((k) => !d.order.includes(k)));
+  return keys.map((k) => ({ key: k, label: d.fmt(k), rows: m.get(k) }));
+}
+
+function statsOf(rows) {
+  const items = ITEMS.map((id) => {
+    const pts = rows.map((r) => r.ratings?.[id]).filter((p) => p && p.x != null && p.y != null);
+    return { x: mean(pts.map((p) => p.x)), y: mean(pts.map((p) => p.y)), n: pts.length };
+  });
+  const subs = rows.map((r) => r.flow?.subPost).filter(Boolean);
+  const tried = rows.filter((r) => r.flow?.tried);
+  return {
+    n: rows.length,
+    items,
+    sub: { yes: subs.filter((v) => v === 'yes').length, maybe: subs.filter((v) => v === 'maybe').length, no: subs.filter((v) => v === 'no').length, n: subs.length },
+    dm: tried.reduce((s, r) => s + (r.flow?.dm || 0), 0),
+    call: tried.reduce((s, r) => s + (r.flow?.call || 0), 0),
+    picked: mean(tried.map((r) => r.flow?.selected).filter((v) => v != null)),
+    yesMed: median(tried.map((r) => r.flow?.timeToYesSec).filter((v) => v != null)),
+  };
+}
+// where an average sits: 5.5 is the middle of a 1–10 scale
+const meanQuad = (p) => (p?.x == null || p?.y == null ? null : quad(p.x >= 5.5 ? 6 : 5, p.y >= 5.5 ? 6 : 5));
+
+function miniMatrix(items) {
+  const S = 200, p = 6, inner = S - p * 2, mid = p + inner / 2;
+  const X = (v) => p + ((v - 0.5) / 10) * inner;
+  const Y = (v) => p + inner - ((v - 0.5) / 10) * inner;
+  let s = `<svg viewBox="0 0 ${S} ${S}" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard Variable, sans-serif" role="img" aria-label="${esc(t('xConv'))} × ${esc(t('yPay'))}">`;
+  s += `<rect x="${p}" y="${p}" width="${inner / 2}" height="${inner / 2}" fill="#F7F3FD"/><rect x="${mid}" y="${p}" width="${inner / 2}" height="${inner / 2}" fill="#FFF1EA"/>`;
+  s += `<rect x="${p}" y="${mid}" width="${inner / 2}" height="${inner / 2}" fill="#FBFAF8"/><rect x="${mid}" y="${mid}" width="${inner / 2}" height="${inner / 2}" fill="#F1FAF6"/>`;
+  s += `<rect x="${p}" y="${p}" width="${inner}" height="${inner}" fill="none" stroke="#DCD6CE"/>`;
+  s += `<line x1="${mid}" y1="${p}" x2="${mid}" y2="${p + inner}" stroke="#A39B93" stroke-dasharray="3 3"/><line x1="${p}" y1="${mid}" x2="${p + inner}" y2="${mid}" stroke="#A39B93" stroke-dasharray="3 3"/>`;
+  // items with the same average would hide each other: try spots around the average, inside the box
+  const OFFS = [[0, 0], [22, 0], [-22, 0], [0, -22], [0, 22], [22, -22], [-22, 22], [22, 22], [-22, -22]];
+  const clamp = (v) => Math.min(S - p - 11, Math.max(p + 11, v));
+  const placed = [];
+  items.forEach((m, i) => {
+    if (m.x == null) return;
+    let cx = clamp(X(m.x)), cy = clamp(Y(m.y));
+    for (const [dx, dy] of OFFS) {
+      const x = clamp(X(m.x) + dx), y = clamp(Y(m.y) + dy);
+      if (!placed.some((q) => Math.abs(q.x - x) < 20 && Math.abs(q.y - y) < 20)) { cx = x; cy = y; break; }
+    }
+    placed.push({ x: cx, y: cy });
+    s += `<g><circle cx="${cx}" cy="${cy}" r="11" fill="${QCOLOR[meanQuad(m)] || QCOLOR.mp}" stroke="#fff" stroke-width="2"><title>${esc(t(`s${i + 1}s`))}: ${f1(m.x)} / ${f1(m.y)}</title></circle><text x="${cx}" y="${cy + 4}" font-size="11.5" font-weight="800" fill="#fff" text-anchor="middle">${i + 1}</text></g>`;
+  });
+  return s + '</svg>';
+}
+
+function subBar(sub) {
+  if (!sub.n) return '<span class="muted">–</span>';
+  const w = (k) => (sub[k] / sub.n) * 100;
+  return `<div class="subbar" title="${esc(t('subLine', { y: sub.yes, m: sub.maybe, n: sub.no }))}"><i class="sb-yes" style="width:${w('yes')}%"></i><i class="sb-maybe" style="width:${w('maybe')}%"></i><i class="sb-no" style="width:${w('no')}%"></i></div>
+    <small>${t('subLine', { y: pct(sub.yes, sub.n), m: pct(sub.maybe, sub.n), n: pct(sub.no, sub.n) })}</small>`;
+}
+
+function compareSection(rows) {
+  $('#cmp-dims').innerHTML = Object.entries(DIMS).map(([k, d]) => `<button type="button" data-dim="${k}" aria-pressed="${CMP === k}">${esc(t(d.label))}</button>`).join('');
+  if (!rows.length) {
+    $('#cmp-minis').innerHTML = '';
+    $('#cmp-table').innerHTML = `<div class="empty-state">${t('noData')}</div>`;
+    $('#cmp-note').textContent = '';
+    return;
+  }
+  const groups = groupsBy(rows, CMP).map((g) => ({ ...g, s: statsOf(g.rows) }));
+  $('#cmp-minis').innerHTML = groups.map((g) => `<div class="cmp-card"><div class="cmp-head"><b>${esc(g.label)}</b><span>n ${g.s.n}</span></div>${miniMatrix(g.s.items)}<div class="cmp-sub">${subBar(g.s.sub)}</div></div>`).join('');
+  const head = [t('cCat'), 'n', t('s1s'), t('s2s'), t('s3s'), t('s4s'), t('cQuad'), t('cSub'), t('cCh'), t('cPick'), t('cYes')];
+  const body = groups.map(({ label, s }) => {
+    const q = meanQuad(s.items[3]);
+    return `<tr><td><b>${esc(label)}</b></td><td class="num">${s.n}</td>${s.items.map((it) => `<td class="num">${f1(it.x)} / ${f1(it.y)}</td>`).join('')}
+      <td>${q ? `<span class="qtag ${q}">${qName(q)}</span>` : '–'}</td><td>${subBar(s.sub)}</td>
+      <td class="num">${s.dm} : ${s.call}</td><td class="num">${f1(s.picked)}</td><td class="num">${s.yesMed == null ? '–' : f1(s.yesMed) + t('sec')}</td></tr>`;
+  }).join('');
+  $('#cmp-table').innerHTML = `<table class="rs-t"><thead><tr>${head.map((h, i) => `<th class="${i === 0 || i === 6 || i === 7 ? '' : 'num'}">${esc(h)}</th>`).join('')}</tr></thead><tbody>${body}</tbody></table>`;
+  $('#cmp-note').textContent = t('cmpNote');
+}
+
 function draw() {
   document.documentElement.lang = lang;
   document.querySelectorAll('[data-t]').forEach((el) => { el.textContent = t(el.dataset.t); });
@@ -284,6 +395,7 @@ function draw() {
     ['#chartA', '#tableA', '#behavior', '#profile'].forEach((s) => { $(s).innerHTML = ''; });
     $('#tableA').innerHTML = `<div class="empty-state">${t('noData')}</div>`;
   }
+  compareSection(rows);
   screensSection(rows, $('#dotsA').checked);
   behaviorSection(rows);
   profileSection(rows);
@@ -306,32 +418,83 @@ function listSection(rows) {
 }
 $('#list').addEventListener('click', async (e) => {
   const b = e.target.closest('[data-del]');
-  if (!b || !confirm(t('delAsk'))) return;
+  if (!b) return;
+  const r = ROWS.find((x) => x.id === b.dataset.del);
+  const g = r?.group === 'teaching' ? t('teaching') : r?.group || '–';
+  if (!(await confirmBox({ title: t('delTitle'), body: t('delBody', { time: kst(r?.createdAt), g }), ok: t('del') }))) return;
   const res = await fetch(`/api/responses?id=${encodeURIComponent(b.dataset.del)}`, { method: 'DELETE', headers: { authorization: `Bearer ${KEY}` } });
-  if (res.ok) load();
+  if (res.ok) { notice(t('deleted')); load(); }
 });
 
-// ------------------------------------------------------------------ CSV
-function csvCell(v) {
-  const s = v == null ? '' : String(v);
-  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+// ------------------------------------------------------------------ confirm pop-up + notice (in the page, not browser dialogs)
+function confirmBox({ title, body, ok }) {
+  const d = $('#confirm');
+  if (typeof d.showModal !== 'function') return Promise.resolve(window.confirm(`${title}\n\n${body}`));
+  $('#confirm-title').textContent = title;
+  $('#confirm-body').textContent = body;
+  $('#confirm-ok').textContent = ok;
+  d.querySelector('[value="cancel"]').textContent = t('cancel');
+  d.returnValue = '';
+  return new Promise((resolve) => {
+    d.addEventListener('close', () => resolve(d.returnValue === 'ok'), { once: true });
+    d.showModal();
+    d.querySelector('[value="cancel"]').focus(); // Cancel is the default
+  });
 }
-function download(name, rows) {
-  const text = '﻿' + rows.map((r) => r.map(csvCell).join(',')).join('\n');
+let noticeTimer = null;
+function notice(msg) {
+  const n = $('#notice');
+  n.textContent = msg;
+  n.hidden = false;
+  clearTimeout(noticeTimer);
+  noticeTimer = setTimeout(() => { n.hidden = true; }, 5000);
+}
+
+// ------------------------------------------------------------------ CSV + XLSX
+const today = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' });
+function saveFile(name, blob) {
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([text], { type: 'text/csv;charset=utf-8' }));
+  a.href = URL.createObjectURL(blob);
   a.download = name;
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
-function csvAnswers() {
+function csvCell(v) {
+  const s = v == null ? '' : String(v);
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+function answerTable(rows) {
   const head = ['id', 'recordedAtKST', 'recordedAt', 'submittedAt', 'lang', 'group', 'gender', 'age', 'affiliation', 'mealsOut', 'apps',
     ...ITEMS.flatMap((i) => [`${i}_convenient`, `${i}_pay`, `${i}_quadrant`]),
     'tried', 'scenario', 'selected', 'dm', 'call', 'subscribeBefore', 'subscribeAfter', 'facilitatorOutcome', 'result', 'winner', 'winnerNoRecommender', 'timeToYesSec', 'chooseSec'];
-  const body = filtered().map((r) => [r.id, kst(r.createdAt), r.createdAt, r.submittedAt, r.lang, r.group, r.profile?.gender, r.profile?.age, r.profile?.affiliation, r.profile?.mealsOut, (r.profile?.apps || []).join(';'),
+  const body = rows.map((r) => [r.id, kst(r.createdAt), r.createdAt, r.submittedAt, r.lang, r.group, r.profile?.gender, r.profile?.age, r.profile?.affiliation, r.profile?.mealsOut, (r.profile?.apps || []).join(';'),
     ...ITEMS.flatMap((i) => [r.ratings?.[i]?.x, r.ratings?.[i]?.y, quad(r.ratings?.[i]?.x, r.ratings?.[i]?.y)]),
-    r.flow?.tried, r.flow?.scenario, r.flow?.selected, r.flow?.dm, r.flow?.call, r.flow?.subPre, r.flow?.subPost, r.flow?.outcome, r.flow?.result, r.flow?.winner, r.flow?.winnerListingOnly, r.flow?.timeToYesSec, r.flow?.chooseSec]);
-  download(`tmc-answers-${new Date().toISOString().slice(0, 10)}.csv`, [head, ...body]);
+    r.flow?.tried == null ? null : String(r.flow.tried), r.flow?.scenario, r.flow?.selected, r.flow?.dm, r.flow?.call, r.flow?.subPre, r.flow?.subPost, r.flow?.outcome, r.flow?.result, r.flow?.winner,
+    r.flow?.winnerListingOnly == null ? null : String(r.flow.winnerListingOnly), r.flow?.timeToYesSec, r.flow?.chooseSec]);
+  return [head, ...body];
+}
+// one sheet per profile field; raw codes and English names keep the files easy to analyse
+const r2 = (v) => (v == null ? null : Math.round(v * 100) / 100);
+const QNAME_EN = { mp: T.en.mp, np: T.en.np, mf: T.en.mf, nn: T.en.nn2 };
+function compareTable(rows, dim) {
+  const head = ['category', 'n', 's1_convenient', 's1_pay', 's2_convenient', 's2_pay', 's3_convenient', 's3_pay', 's4_convenient', 's4_pay', 's4_quadrant',
+    'subscribe_yes', 'subscribe_maybe', 'subscribe_no', 'subscribe_yes_pct', 'dm_requests', 'ai_call_requests', 'places_picked_avg', 'first_yes_sec_median'];
+  const body = groupsBy(rows, dim).map(({ key, rows: rs }) => {
+    const s = statsOf(rs);
+    const q = meanQuad(s.items[3]);
+    return [key, s.n, ...s.items.flatMap((it) => [r2(it.x), r2(it.y)]), q ? QNAME_EN[q] : null,
+      s.sub.yes, s.sub.maybe, s.sub.no, s.sub.n ? Math.round((s.sub.yes / s.sub.n) * 100) : null, s.dm, s.call, r2(s.picked), r2(s.yesMed)];
+  });
+  return [head, ...body];
+}
+function csvAnswers() {
+  const text = '﻿' + answerTable(filtered()).map((r) => r.map(csvCell).join(',')).join('\n');
+  saveFile(`tmc-answers-${today()}.csv`, new Blob([text], { type: 'text/csv;charset=utf-8' }));
+}
+function xlsxAll() {
+  const rows = filtered();
+  const sheets = [{ name: 'Answers', rows: answerTable(rows) }, ...Object.entries(DIMS).map(([k, d]) => ({ name: `By ${d.sheet}`, rows: compareTable(rows, k) }))];
+  saveFile(`tmc-results-${today()}.xlsx`, new Blob([makeXlsx(sheets)], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
 }
 // ------------------------------------------------------------------ events
 $('#gate-form').addEventListener('submit', (e) => {
@@ -354,12 +517,21 @@ $('#dotsA').addEventListener('change', draw);
 $('#refresh').addEventListener('click', () => load());
 document.addEventListener('visibilitychange', () => { if (!document.hidden && KEY && !$('#dash').hidden) load({ quiet: true }); });
 $('#csv1').addEventListener('click', csvAnswers);
+$('#xlsx1').addEventListener('click', xlsxAll);
+$('#cmp-dims').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-dim]');
+  if (!b) return;
+  CMP = b.dataset.dim;
+  compareSection(filtered());
+});
 $('#lang').addEventListener('click', () => { lang = lang === 'ko' ? 'en' : 'ko'; if (ROWS.length || !$('#dash').hidden) draw(); else document.querySelectorAll('[data-t]').forEach((el) => { el.textContent = t(el.dataset.t); }); });
+// deleting everything needs the key (the buttons only exist after it) and a second yes in the pop-up
 $('#wipe').addEventListener('click', async () => {
-  const ans = prompt(t('wipeAsk'));
-  if (ans !== 'DELETE') return;
+  const n = ROWS.length;
+  if (!n) { notice(t('noData')); return; }
+  if (!(await confirmBox({ title: t('wipeTitle', { n }), body: t('wipeBody'), ok: t('wipeOk', { n }) }))) return;
   const res = await fetch('/api/responses', { method: 'DELETE', headers: { authorization: `Bearer ${KEY}`, 'content-type': 'application/json' }, body: JSON.stringify({ confirm: 'DELETE' }) });
-  if (res.ok) { alert(t('wiped')); load(); }
+  if (res.ok) { notice(t('wiped')); load(); } else notice(t('badKey'));
 });
 
 document.querySelectorAll('[data-t]').forEach((el) => { el.textContent = t(el.dataset.t); });

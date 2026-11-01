@@ -13,6 +13,27 @@ body.rs { background: var(--bg-3); height: auto; min-height: 100%; }
 .rs-wipe:hover { filter: brightness(.94); }
 /* until the key is entered: no live badge, refresh, CSV, lock or delete */
 body.rs-locked .rs-auth, body.rs-locked .rs-live { display: none; }
+#cmp-table td.num { white-space: nowrap; }
+.rs-notice { margin: 0 0 12px; padding: 10px 14px; border-radius: 12px; background: var(--ok-tint); color: var(--ok); font-weight: 700; font-size: 13.5px; }
+/* compare by category */
+.rs-seg { display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 4px; border-radius: 12px; background: var(--bg-2); }
+.rs-seg button { height: 32px; padding: 0 12px; border-radius: 9px; font-size: 13px; font-weight: 700; color: var(--ink-2); }
+.rs-seg button[aria-pressed="true"] { background: #fff; color: var(--ink); box-shadow: 0 1px 3px rgba(0, 0, 0, .12); }
+.cmp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin: 10px 0 16px; }
+.cmp-card { border: 1px solid var(--line); border-radius: var(--r-md); padding: 10px; display: grid; gap: 8px; align-content: start; }
+.cmp-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 14px; }
+.cmp-head span { font-size: 12.5px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.cmp-card svg { width: 100%; height: auto; display: block; }
+.subbar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; background: var(--bg-2); min-width: 90px; }
+.subbar i { display: block; height: 100%; }
+.sb-yes { background: #0E9F6E; } .sb-maybe { background: #E0A100; } .sb-no { background: #D94B4B; }
+.cmp-sub small, .rs-t .subbar + small { display: block; margin-top: 4px; font-size: 12px; color: var(--ink-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* confirm pop-up */
+.rs-dialog { border: 0; border-radius: 18px; padding: 22px; width: min(440px, calc(100vw - 32px)); box-shadow: 0 20px 60px rgba(0, 0, 0, .25); }
+.rs-dialog::backdrop { background: rgba(20, 16, 12, .45); }
+.rs-dialog h2 { margin: 0 0 8px; font-size: 19px; letter-spacing: -.01em; }
+.rs-dialog p { margin: 0 0 18px; font-size: 14px; color: var(--ink-2); line-height: 1.5; }
+.rs-dialog-btns { display: flex; justify-content: flex-end; gap: 8px; }
 .rs-main { max-width: 1240px; margin: 0 auto; padding: 20px 24px 60px; }
 .rs-gate { max-width: 420px; margin: 12vh auto 0; background: #fff; border: 1px solid var(--line); border-radius: var(--r-lg); padding: 24px; }
 .rs-gate form { display: flex; gap: 8px; margin-top: 14px; }
