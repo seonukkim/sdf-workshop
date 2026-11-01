@@ -1,7 +1,10 @@
 // Presenter view for the 16:9 big screen (facilitator PC). The stage is a fixed 1600×900 canvas scaled to
 // fill the screen: the phone runs the prototype on the left, this panel explains what is happening on the right.
-// Six steps: 0 Situation · 1 Choose · 2 Wait · 3 Booked · 4 Quant (rate on phones, online) · 5 Qual (A3 + post-its,
-// offline, guided up to the discussion). It listens to app events and never drives the simulation itself.
+// The panel (1110×844) sits on 12 columns of 76 px with 18 px gutters, in four rows: header 88 · 18 · steps 72 ·
+// 18 · content 648. Every content screen is a 44 px top line (title left, status right) + 18 + a 586 px body,
+// and every block in it spans whole columns (see app.css). Add ?grid=1 to the address to see the lines.
+// Six steps: 0 Situation · 1 Choose · 2 Wait · 3 Booked · 4 Quant (rate on phones, online, 5 min) · 5 Qual (A3 +
+// post-its, offline, three timed parts). It listens to app events and never drives the simulation itself.
 // Copy is English first with Korean as a quieter second line. Facilitator mode: nothing here is saved.
 
 import { S, params, scenario, place, cand, trust, resetPerson } from './state.js';
@@ -13,16 +16,27 @@ import { go } from './nav.js';
 
 const WIDE = window.matchMedia('(min-width: 1100px)');
 const CANVAS = { w: 1600, h: 900 };
-const ROW_H = 116;
-const ROW_GAP = 12;
+const GRID = new URLSearchParams(location.search).get('grid') === '1'; // layout check: column and row lines
+const GAP = 18;          // gutter, and the space between blocks
+const BODY_H = 586;      // content 648 − top line 44 − 18
+const ROW_MAX = 116;     // tallest row of the hub diagram
+const COMPACT = 100;     // lower rows drop their middle text line so nothing is cut
+const NODE_H = 72;       // You and TrustMyChef nodes
+const LINE_H = 24;       // the line between them
+const WIRE_W = 112;      // column 4 plus both gutters: from the TrustMyChef node to the restaurant cards
+const TILE_H = 88;       // number tiles on Booked
+const Q_H = 56;          // question strip (what if)
 const QUAL_STEPS = 3;
-const QUAL_MIN = [7, 3, 8]; // default minutes per Qual part (write ideas · what if · A3 2×2 with the group)
+const TIMER_MIN = { quant: 5, q0: 7, q1: 3, q2: 8 }; // minutes: Quant · Qual write ideas · what if · A3 2×2
+const SUBK = { yes: 'subYes', maybe: 'subMaybe', no: 'subNo' };
 let route = location.pathname;
 let tick = null;
 let showResults = false;     // results stay hidden until the facilitator asks for them
 let resultsData = null;
 let resultsTimer = null;
-const timer = { part: -1, left: QUAL_MIN[0] * 60, running: false, id: null };
+let resultsKey = null;       // kept in memory only: a reload asks for the key again
+const timers = {};           // one countdown per part, so Quant and each Qual part keep their own time
+let timerPart = null;        // the part whose timer is on screen
 
 // ------------------------------------------------------------------ bilingual helpers
 const raw = (lang, k, v) => {
@@ -68,20 +82,18 @@ export function initStage() {
     if (act === 'restart') { skipSubscribe(); resetPerson(); go('/'); }
     if (act === 'results') { showResults = !showResults; if (showResults) loadResults(); else stopResults(); paintLive(); toolbar(); }
     if (act === 'menu') document.getElementById('pv-menu')?.toggleAttribute('hidden');
-    if (act === 'reset') resetAnswers();
   };
   el.addEventListener('click', onClick);
   el.addEventListener('submit', (e) => {
     if (!e.target.matches('#pv-keyform')) return;
     e.preventDefault();
-    const v = e.target.querySelector('input').value.trim();
-    try { sessionStorage.setItem('tmc.key', v); } catch { /* ignore */ }
+    resultsKey = e.target.querySelector('input').value.trim() || null;
     loadResults();
   });
-  // small floating toolbar outside the 16:9 canvas so it never takes space from the screen
+  // small toolbar in the canvas' bottom margin (under the panel), so it never covers the screen
   const bar = document.createElement('div');
   bar.id = 'pv-toolbar';
-  document.body.appendChild(bar);
+  (document.querySelector('.stage') || document.body).appendChild(bar);
   bar.addEventListener('click', onClick);
   paint();
 }
@@ -150,6 +162,13 @@ function stepsHtml() {
   return keys.map((k, i) => `<li><button class="${i < now ? 'done' : i === now ? 'now' : ''}" data-step="${i}"><span class="n">${i}</span><span class="l">${en(k)}<small class="ko">${ko(k)}</small></span></button></li>`).join('');
 }
 
+// ?grid=1: the 12 columns and the row lines on top of the panel
+function gridHtml() {
+  if (!GRID) return '';
+  const rows = [88, 106, 178, 196, 240, 258, 844].map((y) => `<b style="top:${y}px"></b>`).join('');
+  return `<div class="pv-grid" aria-hidden="true">${'<i></i>'.repeat(12)}${rows}</div>`;
+}
+
 function paint() {
   const el = document.getElementById('side');
   if (!el) return;
@@ -158,10 +177,11 @@ function paint() {
     <div class="pv">
       <header class="pv-head">
         <div class="pv-brand"><span class="brand-mark">${icon('chef')}</span><div><b>TrustMyChef</b><span class="pv-title">${en('pvTitle')}<span class="ko">${ko('pvTitle')}</span></span></div></div>
-        <div class="pv-qr"><div class="qr" id="qr"></div><div><b>${esc(location.host)}</b><small>${en('pvScan')}</small><small class="ko">${ko('pvScan')}</small></div></div>
+        <div class="pv-qr"><div><b>${esc(location.host)}</b><small>${en('pvScan')}<span class="ko-inline">${ko('pvScan')}</span></small></div><div class="qr" id="qr"></div></div>
       </header>
       <ol class="pv-steps">${stepsHtml()}</ol>
       <section class="pv-main" id="pv-main"><div class="pv-fit" id="pv-fit">${diagram()}</div></section>
+      ${gridHtml()}
     </div>`;
   toolbar();
   makeQR('qr', location.origin + '/');
@@ -173,9 +193,6 @@ function paintLive() {
   const box = document.getElementById('pv-fit');
   if (!box) return paint();
   box.innerHTML = diagram();
-  document.querySelectorAll('.pv-fac .fac-opts button, .pv-fac .seg-ctl button').forEach((b) => {
-    b.setAttribute('aria-pressed', String(S.fac[b.dataset.fac] === b.dataset.v));
-  });
   afterRender();
 }
 
@@ -192,14 +209,13 @@ function makeQR(id, text) {
   try { new window.QRCode(qrEl, { text, width: 360, height: 360, correctLevel: window.QRCode.CorrectLevel.M }); } catch { /* ignore */ }
 }
 
-// keep the whole explanation on one screen: shrink the live diagram only if it would not fit
+// safety net only: every screen is laid out to fit 648 px at zoom 1
 function fit() {
   const main = document.getElementById('pv-main');
   const box = document.getElementById('pv-fit');
   if (!main || !box) return;
   box.style.zoom = '1';
-  const cs = getComputedStyle(main);
-  const avail = main.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+  const avail = main.clientHeight;
   const need = box.scrollHeight; // reading it here forces layout at zoom 1
   box.style.zoom = String(need > avail ? Math.max(0.6, (avail - 2) / need) : 1);
 }
@@ -215,6 +231,15 @@ function startTick() {
   }, 500);
 }
 
+// ------------------------------------------------------------------ building blocks
+// top line: title on the left (English + Korean), status on the right
+function top(titleHtml, right = '') {
+  return `<div class="pv-top"><h2 class="pv-h">${titleHtml}</h2><div class="pv-top-r">${right}</div></div>`;
+}
+function question(icn, enHtml, koText) {
+  return `<div class="pv-q s12">${icon(icn)}<p>${enHtml}<span class="ko">${esc(koText)}</span></p></div>`;
+}
+
 // ------------------------------------------------------------------ diagrams
 function diagram() {
   if (showResults) return dResults();
@@ -228,19 +253,20 @@ function diagram() {
 
 function dIntro() {
   const sc = scenario();
-  const tv = { wait: sc.waitMin };
   const s2en = fill(STR.en.pvS2, { target: nameEn(sc.target) });
   const s2ko = fill(STR.ko.pvS2, { target: nameKo(sc.target) });
+  const scene = (ic, red, b, k, small) => `<div class="pv-scene s4"><span class="pv-ic ${red ? 'r' : ''}">${icon(ic)}</span><div><b>${b}</b><span class="ko">${k}</span><small>${small}</small></div></div>`;
   return `
-    <div class="pv-story big">
-      <div class="pv-scene"><span class="pv-ic r">${icon('heart')}</span><b>${en('pvS1')}</b><span class="ko">${ko('pvS1')}</span></div>
-      <span class="pv-arrow">${icon('right')}</span>
-      <div class="pv-scene"><span class="pv-ic r">${icon('ban')}</span><b>${esc(s2en)}</b><span class="ko">${esc(s2ko)}</span><small>${en('pvS2d', tv)}</small></div>
-      <span class="pv-arrow">${icon('right')}</span>
-      <div class="pv-scene"><span class="pv-ic">${icon('walk')}</span><b>${en('pvS3')}</b><span class="ko">${ko('pvS3')}</span></div>
-    </div>
-    <div class="pv-idea big"><span class="brand-mark">${icon('chef')}</span><p>${bi('pvSolution')}</p></div>
-    <div class="pv-intro-hub">${hub(sampleRows(), { sample: true, owner: false })}</div>`;
+    ${top(bi('pvIntroTitle'))}
+    <div class="pv-body">
+      <div class="g12">
+        ${scene('heart', true, en('pvS1'), ko('pvS1'), en('pvS1d'))}
+        ${scene('ban', true, esc(s2en), esc(s2ko), en('pvS2d', { wait: sc.waitMin }))}
+        ${scene('walk', false, en('pvS3'), ko('pvS3'), en('pvS3d'))}
+      </div>
+      <div class="pv-idea"><span class="brand-mark">${icon('chef')}</span><p>${bi('pvSolution')}</p></div>
+      ${hub(sampleRows(), { avail: BODY_H - 120 - GAP - 64 - GAP })}
+    </div>`;
 }
 
 // the idea as a picture: three recommended places nearby, the first one says Yes
@@ -252,148 +278,168 @@ function sampleRows() {
 
 function dChoose() {
   const rows = [...S.selected].map(([id, channel]) => ({ id, channel, walkMin: cand(id).walkMin, status: 'plan' }));
-  return `
-    <h2 class="pv-h">${bi('pvChooseTitle')}</h2>
-    ${payHtml()}
-    ${rows.length ? hub(rows, { owner: false }) : `<div class="pv-empty">${icon('utensils', 'lg')}<p>${bi('pvPlanEmpty')}</p></div>`}`;
+  const n = rows.length;
+  const right = n ? `<span class="pv-chip w3"><span>${en('pvPicked', { n })}<span class="ko">${ko('pvPicked', { n })}</span></span></span>` : '';
+  const body = n
+    ? hub(rows, { owner: false, side: passCard() })
+    : `<div class="g12 pv-empty-row"><div class="pv-empty s8">${icon('utensils', 'lg')}<p>${bi('pvPlanEmpty')}</p></div><aside class="s4">${passCard()}</aside></div>`;
+  return `${top(bi('pvChooseTitle'), right)}<div class="pv-body">${body}</div>`;
 }
 
-// the money moment: highlighted while the subscribe popup is open on the phone, then both answers
-function payHtml() {
-  const f = S.flow;
-  const ans = (v) => (v ? en({ yes: 'subYes', maybe: 'subMaybe', no: 'subNo' }[v]) : '–');
-  if (S.subSheet) {
-    const when = S.subSheet === 'post' ? 'subAfter' : 'subBefore';
-    return `<div class="pv-pay"><span class="pass-tag">${icon('star', 'xs')}₩3,000/mo</span><p><b>${en('pvSubMoment')}</b><span class="ko">${ko('pvSubMoment')}</span>${en(when)} · ${ko(when)}</p></div>`;
-  }
-  if (f.subPre || f.subPost) {
-    return `<div class="pv-pay on"><span class="pass-tag">${icon('check', 'xs')}${en('pvSubAnswers')}</span><p>${en('subBefore')}: <b>${ans(f.subPre)}</b> → ${en('subAfter')}: <b>${ans(f.subPost)}</b><span class="ko">${ko('subBefore')} → ${ko('subAfter')}</span></p></div>`;
-  }
-  return '';
+// Choose: what the Pass is, as information only (the question comes after booking)
+function passCard() {
+  return `<div class="pv-pass">
+    <span class="pass-tag">${icon('star', 'xs')}${en('pvPassT')}</span>
+    <p class="pv-price"><b>${en('subPrice')}</b><span>${en('pvPerMonth')}<span class="ko-inline">${ko('pvPerMonth')}</span></span></p>
+    <ul>
+      <li>${icon('check', 'sm')}<span>${en('pvPassSend')}<span class="ko">${ko('pvPassSend')}</span></span></li>
+      <li class="free">${icon('pin', 'sm')}<span>${en('pvPassFree')}<span class="ko">${ko('pvPassFree')}</span></span></li>
+    </ul>
+  </div>`;
 }
 
 function dWait() {
   const st = S.match?.state;
   if (!st) return dChoose();
-  let extra = '';
-  if (st.result === 'none') extra = `<div class="pv-q">${icon('alert')}<p><b>${en('noneTitle')}.</b> ${en('pvNoneQ')}<span class="ko">${ko('noneTitle')}. ${ko('pvNoneQ')}</span></p></div>`;
-  else if (st.result === 'booked' && trust(place(st.winner)).listingOnly) extra = `<div class="pv-q">${icon('alert')}<p>${bi('pvBadQ')}</p></div>`;
-  return `
-    <h2 class="pv-h">${bi('pvWaitTitle')}</h2>
-    <p class="pv-rule">${icon('check', 'sm')}<span>${bi('pvRule')}</span><span class="badge sim">${en('pvSim')}</span></p>
-    ${hub(st.reqs, { st })}
-    ${extra}`;
+  let q = '';
+  if (st.result === 'none') q = question('alert', `<b>${en('noneTitle')}.</b> ${en('pvNoneQ')}`, `${ko('noneTitle')}. ${ko('pvNoneQ')}`);
+  else if (st.result === 'booked' && trust(place(st.winner)).listingOnly) q = question('alert', en('pvBadQ'), ko('pvBadQ'));
+  const right = `<span class="pv-chip w4 ok">${icon('check', 'sm')}<span>${en('pvRule')}<span class="ko">${ko('pvRule')}</span></span></span><span class="pv-chip w4 sim"><span>${en('pvSim')}<span class="ko">${ko('pvSim')}</span></span></span>`;
+  return `${top(bi('pvWaitTitle'), right)}
+    <div class="pv-body">${hub(st.reqs, { st, avail: BODY_H - (q ? Q_H + GAP : 0) })}${q}</div>`;
 }
 
 function dBooked() {
   const st = S.match?.state;
   if (!st || st.result !== 'booked') return dIntro();
-  const asked = st.reqs.length;
   const cancelled = st.reqs.filter((r) => r.status === 'cancelled').length;
-  const bad = trust(place(st.winner)).listingOnly;
-  const stat = (k, v) => `<div><small>${en(k)}</small><small class="ko">${ko(k)}</small><b>${v}</b></div>`;
-  return `
-    <h2 class="pv-h">${bi('pvBookedTitle')}</h2>
-    <div class="pv-stats three">
-      ${stat('pvSent', asked)}${stat('pvTime', `${Math.max(1, Math.round(st.winAt || 7))}s`)}${stat('pvCancelled', cancelled)}
-    </div>
-    ${payHtml()}
-    ${hub(st.reqs, { st })}
-    ${bad ? `<div class="pv-q">${icon('alert')}<p>${bi('pvBadQ')}</p></div>` : ''}`;
+  const q = trust(place(st.winner)).listingOnly ? question('alert', en('pvBadQ'), ko('pvBadQ')) : '';
+  const tile = (k, v) => `<div class="pv-tile s4"><small>${en(k)}<span class="ko-inline">${ko(k)}</span></small><b>${v}</b></div>`;
+  return `${top(bi('pvBookedTitle'), subChip())}
+    <div class="pv-body">
+      <div class="g12">${tile('pvSent', st.reqs.length)}${tile('pvTime', `${Math.max(1, Math.round(st.winAt || 7))}s`)}${tile('pvCancelled', cancelled)}</div>
+      ${hub(st.reqs, { st, avail: BODY_H - TILE_H - GAP - (q ? Q_H + GAP : 0) })}
+      ${q}
+    </div>`;
+}
+
+// Booked: the subscribe question pops up on the phone 1.4 s after the booking; highlighted while it is open,
+// then the answer (the last answer counts)
+function subChip() {
+  const price = `${en('subPrice')} ${en('pvPerMonth')}`;
+  if (S.subSheet) return `<span class="pv-chip w4 pay on">${icon('star', 'sm')}<span>${en('pvSubAsk')} · ${price}<span class="ko">${ko('pvSubAsk')}</span></span></span>`;
+  const v = S.flow.subPost;
+  if (v) return `<span class="pv-chip w4 pay ${v}">${icon(v === 'yes' ? 'check' : 'star', 'sm')}<span>${en('pvSubAfterL')}: <b>${en(SUBK[v])}</b><span class="ko">${ko('pvSubAfterL')}: ${ko(SUBK[v])}</span></span></span>`;
+  return `<span class="pv-chip w4 pay">${icon('star', 'sm')}<span>${en('pvPassT')} · ${price}<span class="ko">${ko('pvPassT')}</span></span></span>`;
 }
 
 // step 4 · Quant: everyone does this on their own phone (online)
 function dQuant() {
-  return `
-    <div class="pv-mode on-line">${icon('phone', 'sm')}${en('pvOnline')} <span class="ko-inline">${ko('pvOnline')}</span></div>
-    <h2 class="pv-h">${bi('pvQuantTitle')}</h2>
-    <div class="pv-quant">
-      <div class="pv-bigqr"><div class="qr" id="qr-big"></div><b>${esc(location.host)}</b></div>
-      <div>
-        <ol class="pv-numbered">
-          <li><span>${icon('phone')}</span><p>${bi('pvQuant1')}</p></li>
-          <li><span>${icon('utensils')}</span><p>${bi('pvQuant2')}</p></li>
-          <li><span>${icon('check')}</span><p>${bi('pvQuant3')}</p></li>
-        </ol>
-        ${miniQuad('qConv', 'qPay', ['qMP', 'qNP', 'qMF', 'qNN'])}
+  const li = (n, k) => `<li><span>${n}</span><p>${bi(k)}</p></li>`;
+  return `${top(bi('pvQuantTitle'), timerHtml('quant'))}
+    <div class="pv-body g12">
+      <div class="pv-qr-col s4">
+        <div class="pv-bigqr"><div class="qr" id="qr-big"></div></div>
+        <b class="pv-host">${esc(location.host)}</b>
+        <ol class="pv-numbered">${li(1, 'pvQuant1')}${li(2, 'pvQuant2')}${li(3, 'pvQuant3')}</ol>
       </div>
+      ${quad('qConv', 'qPay', ['qMP', 'qNP', 'qMF', 'qNN'], 's8')}
     </div>`;
 }
 
-// step 5 · Qual: offline on A3 paper with post-its, guided up to the discussion
+// step 5 · Qual: offline on A3 paper with post-its, in three timed parts
 function dQual() {
   const q = Math.min(S.qual || 0, QUAL_STEPS - 1);
-  const keys = ['qual1t', 'qual2t', 'qual3t'];
-  const chips = keys.map((k, i) => `<button class="${i < q ? 'done' : i === q ? 'now' : ''}" data-qual="${i}"><span class="n">${i + 1}</span><span>${en(k)}<small class="ko">${ko(k)}</small></span></button>`).join('');
+  const parts = ['qual1t', 'qual2t', 'qual3t'];
+  const chips = parts.map((k, i) => `<button class="s4 ${i < q ? 'done' : i === q ? 'now' : ''}" data-qual="${i}"><span class="n">${i + 1}</span><span class="l">${en(k)}<small class="ko">${ko(k)}</small></span><span class="min">${en('pvMin', { n: TIMER_MIN[`q${i}`] })}</span></button>`).join('');
   let body = '';
   if (q === 0) {
-    const feats = [['1', 'step1', 'utensils'], ['2', 'step2', 'chat'], ['3', 'step3', 'check']];
-    body = `
-      <div class="pv-feats">${feats.map(([n, k, ic]) => `<div><span class="pv-feat-n">${n}</span>${icon(ic)}<b>${en(k)}</b><span class="ko">${ko(k)}</span></div>`).join('')}</div>
-      <p class="pv-prompt">${icon('star', 'sm')}<span>${bi('qual1d')}</span></p>`;
+    const feats = [['step1', 'choose'], ['step2', 'wait'], ['step3', 'booked']];
+    body = feats.map(([k, shot], i) => `<figure class="pv-shot s4"><figcaption><span class="n">${i + 1}</span><span>${bi(k)}</span></figcaption>${phone(shot)}</figure>`).join('');
   } else if (q === 1) {
-    body = `
-      <div class="pv-whatif">
-        <div>${icon('alert')}<b>${en('qual2a')}</b><span class="ko">${ko('qual2a')}</span></div>
-        <div>${icon('ban')}<b>${en('qual2b')}</b><span class="ko">${ko('qual2b')}</span></div>
-      </div>`;
+    const qs = [['alert', 'qual2a', 'bad'], ['ban', 'qual2b', 'none']];
+    body = qs.map(([ic, k, shot]) => `<figure class="pv-whatif s6"><figcaption>${icon(ic)}<b>${en(k)}</b><span class="ko">${ko(k)}</span></figcaption>${phone(shot)}</figure>`).join('');
   } else {
-    body = `
-      ${miniQuad('qual3x', 'qual3y', ['qpMP', 'qpNP', 'qpMF', 'qpNN'], 'big')}
-      <p class="pv-prompt">${icon('star', 'sm')}<span>${bi('qual3p')}</span></p>`;
+    body = quad('qual3x', 'qual3y', ['qpMP', 'qpNP', 'qpMF', 'qpNN'], 's12');
   }
-  if (timer.part !== q) { clearInterval(timer.id); Object.assign(timer, { part: q, left: QUAL_MIN[q] * 60, running: false, id: null }); }
-  return `
-    <div class="pv-qual-top">
-      <div class="pv-mode off-line big">${icon('utensils', 'sm')}${en('pvOffline')} <span class="ko-inline">${ko('pvOffline')}</span></div>
-      ${timerHtml()}
-    </div>
-    <div class="pv-qual-steps">${chips}</div>
-    <div class="pv-qual-body">${body}</div>`;
+  return `${top(bi(['pvQual1', 'qual2p', 'qual3p'][q]), timerHtml(`q${q}`))}
+    <div class="pv-body">
+      <div class="g12 pv-qual-steps">${chips}</div>
+      <div class="g12 pv-qual-body">${body}</div>
+    </div>`;
 }
 
-function timerHtml() {
-  const up = timer.left <= 0;
-  return `<div class="pv-timer ${timer.running ? 'run' : ''} ${up ? 'up' : ''}">
-    <output id="pv-timer">${up ? en('timerUp') : mmss(timer.left)}</output>
-    <div class="pv-timer-btns">
-      <button data-timer="minus" aria-label="−1 min">−1</button>
-      <button class="go" data-timer="toggle">${timer.running ? en('timerPause') : en('timerStart')}</button>
-      <button data-timer="plus" aria-label="+1 min">+1</button>
-      <button data-timer="reset" aria-label="${esc(en('timerReset'))}">${icon('refresh', 'xs')}</button>
-    </div>
+// the real app screen in a small phone frame (always the current UI)
+function phone(name) {
+  return `<div class="pv-phone"><iframe src="/?shot=${name}&lang=en&at=${S.scenarioId}" title="${esc(name)}" tabindex="-1" aria-hidden="true"></iframe></div>`;
+}
+
+// one 2×2: the two axes run along the 18 px cross between the cells, with their names at the ends
+function quad(x, y, names, cls) {
+  const cell = (k, c) => `<div class="${c}"><b>${en(k)}</b><span class="ko">${ko(k)}</span></div>`;
+  return `<div class="pv-quad ${cls}">
+    ${cell(names[1], 'np')}${cell(names[0], 'mp')}${cell(names[3], 'nn')}${cell(names[2], 'mf')}
+    <i class="ax x" aria-hidden="true"></i><i class="ax y" aria-hidden="true"></i>
+    <span class="ax-l x">${en(x)} →<span class="ko-inline">${ko(x)}</span></span>
+    <span class="ax-l y">↑ ${en(y)}<span class="ko-inline">${ko(y)}</span></span>
   </div>`;
 }
+
+// ------------------------------------------------------------------ timer (one line, top right)
+function timerOf(part) {
+  if (!timers[part]) timers[part] = { left: TIMER_MIN[part] * 60, running: false, id: null };
+  return timers[part];
+}
+function timerHtml(part) {
+  timerPart = part;
+  const tm = timerOf(part);
+  const up = tm.left <= 0;
+  return `<div class="pv-timer ${tm.running ? 'run' : ''} ${up ? 'up' : ''}" id="pv-timer-box">
+    <output id="pv-timer">${up ? en('timerUp') : mmss(tm.left)}</output>
+    <button data-timer="minus" aria-label="−1 min">−1</button>
+    <button class="go" data-timer="toggle">${tm.running ? en('timerPause') : en('timerStart')}</button>
+    <button data-timer="plus" aria-label="+1 min">+1</button>
+    <button data-timer="reset" aria-label="${esc(en('timerReset'))}">${icon('refresh', 'xs')}</button>
+  </div>`;
+}
+function repaintTimer() {
+  const box = document.getElementById('pv-timer-box');
+  if (box && timerPart) box.outerHTML = timerHtml(timerPart);
+}
 function timerAction(act) {
+  const part = timerPart;
+  if (!part) return;
+  const tm = timerOf(part);
   if (act === 'toggle') {
-    timer.running = !timer.running;
-    clearInterval(timer.id);
-    if (timer.running) {
-      timer.id = setInterval(() => {
-        timer.left -= 1;
+    if (!tm.running && tm.left <= 0) tm.left = TIMER_MIN[part] * 60;
+    tm.running = !tm.running;
+    clearInterval(tm.id);
+    if (tm.running) {
+      tm.id = setInterval(() => {
+        tm.left = Math.max(0, tm.left - 1);
+        if (tm.left === 0) { clearInterval(tm.id); tm.running = false; }
+        if (timerPart !== part) return;
         const out = document.getElementById('pv-timer');
-        if (out) out.textContent = timer.left <= 0 ? en('timerUp') : mmss(timer.left);
-        if (timer.left <= 0) { clearInterval(timer.id); timer.running = false; paintLive(); }
+        if (tm.left === 0) repaintTimer();
+        else if (out) out.textContent = mmss(tm.left);
       }, 1000);
     }
   }
-  if (act === 'plus') timer.left += 60;
-  if (act === 'minus') timer.left = Math.max(0, timer.left - 60);
-  if (act === 'reset') { clearInterval(timer.id); timer.running = false; timer.left = QUAL_MIN[Math.max(0, timer.part)] * 60; }
-  paintLive();
+  if (act === 'plus') tm.left += 60;
+  if (act === 'minus') tm.left = Math.max(0, tm.left - 60);
+  if (act === 'reset') { clearInterval(tm.id); tm.running = false; tm.left = TIMER_MIN[part] * 60; }
+  repaintTimer();
 }
 
 // ------------------------------------------------------------------ results (hidden until asked)
 async function loadResults() {
-  let key = null;
-  try { key = sessionStorage.getItem('tmc.key'); } catch { /* ignore */ }
-  if (!key) { resultsData = { needKey: true }; paintLive(); return; }
+  if (!resultsKey) { resultsData = { needKey: true }; paintLive(); return; }
   try {
-    const res = await fetch('/api/responses', { headers: { authorization: `Bearer ${key}` }, cache: 'no-store' });
-    if (res.status === 401) { try { sessionStorage.removeItem('tmc.key'); } catch { /* ignore */ } resultsData = { needKey: true, bad: true }; paintLive(); return; }
+    const res = await fetch('/api/responses', { headers: { authorization: `Bearer ${resultsKey}` }, cache: 'no-store' });
+    if (res.status === 401) { resultsKey = null; resultsData = { needKey: true, bad: true }; paintLive(); return; }
     resultsData = { rows: (await res.json()).rows || [], at: new Date() };
   } catch {
-    resultsData = resultsData || { rows: [] };
+    resultsData = resultsData?.rows ? resultsData : { rows: [] };
   }
   if (showResults) paintLive();
   clearTimeout(resultsTimer);
@@ -403,11 +449,12 @@ function stopResults() { clearTimeout(resultsTimer); }
 
 function dResults() {
   const d = resultsData;
-  if (!d) return `<div class="pv-empty"><p>…</p></div>`;
+  if (!d) return `${top(bi('tbResults'))}<div class="pv-body"></div>`;
   if (d.needKey) {
-    return `<form class="pv-keyform" id="pv-keyform"><label>${icon('lock', 'sm')}${en('tbKey')} <span class="ko-inline">${ko('tbKey')}</span></label>
-      <input class="input" type="password" autocomplete="off"><button class="btn btn-primary">${en('tbKeyOpen')}</button>
-      ${d.bad ? `<p class="err">${en('tbKeyBad')}</p>` : ''}</form>`;
+    return `${top(bi('tbResults'))}
+      <div class="pv-body"><form class="pv-keyform" id="pv-keyform"><label>${icon('lock', 'sm')}${en('tbKey')} <span class="ko-inline">${ko('tbKey')}</span></label>
+        <input class="input" type="password" autocomplete="off"><button class="btn btn-primary">${en('tbKeyOpen')}</button>
+        ${d.bad ? `<p class="err">${en('tbKeyBad')}</p>` : ''}</form></div>`;
   }
   const rows = d.rows || [];
   const items = ['s1', 's2', 's3', 's4'];
@@ -417,19 +464,20 @@ function dResults() {
     return { label: String(i + 1), x: avg(pts.map((p) => p.x)), y: avg(pts.map((p) => p.y)), n: pts.length };
   }).filter((m) => m.n);
   const dots = rows.flatMap((r) => items.map((k) => r.ratings?.[k]).filter((p) => p && p.x != null && p.y != null));
-  const yes = (key) => { const a = rows.filter((r) => r.flow?.[key]); return a.length ? Math.round((a.filter((r) => r.flow[key] === 'yes').length / a.length) * 100) + '%' : '–'; };
+  const asked = rows.filter((r) => r.flow?.subPost);
+  const yes = asked.length ? `${Math.round((asked.filter((r) => r.flow.subPost === 'yes').length / asked.length) * 100)}%` : '–';
   const names = ['s1t', 's2t', 's3t', 's4t'];
-  return `
-    <div class="pv-res">
-      <div class="pv-res-chart">${resChart(means, dots)}</div>
-      <div class="pv-res-side">
-        <div class="pv-res-kpi"><small>${en('resN')}</small><b>${rows.length}</b></div>
-        <div class="pv-res-kpi"><small>${en('resSub')} · ${en('subBefore')} → ${en('subAfter')}</small><b>${yes('subPre')} → ${yes('subPost')}</b></div>
+  const at = d.at ? d.at.toTimeString().slice(0, 8) : '';
+  return `${top(bi('tbResults'), `<span class="pv-chip w3">${en('resUpdated')} ${at}</span>`)}
+    <div class="pv-body g12">
+      <div class="pv-res-chart s6">${resChart(means, dots)}</div>
+      <div class="pv-res-side s6">
+        <div class="pv-tile"><small>${en('resN')}<span class="ko-inline">${ko('resN')}</span></small><b>${rows.length}</b></div>
+        <div class="pv-tile"><small>${en('resSubAfter')}<span class="ko-inline">${ko('resSubAfter')}</span></small><b>${yes}</b></div>
         <ol class="pv-res-legend">${names.map((k) => `<li>${en(k)}</li>`).join('')}</ol>
-        <p class="t-cap">${en('resUpdated')} ${d.at ? d.at.toTimeString().slice(0, 8) : ''}</p>
+        ${rows.length ? '' : `<p class="pv-res-empty">${en('resEmpty')}</p>`}
       </div>
-    </div>
-    ${rows.length ? '' : `<p class="pv-empty">${en('resEmpty')}</p>`}`;
+    </div>`;
 }
 
 function resChart(means, dots) {
@@ -457,28 +505,9 @@ function resChart(means, dots) {
   return g + '</svg>';
 }
 
-async function resetAnswers() {
-  let key = null;
-  try { key = sessionStorage.getItem('tmc.key'); } catch { /* ignore */ }
-  if (!key) key = window.prompt(en('tbKey'));
-  if (!key) return;
-  if (window.prompt(`${en('tbResetAsk')}\n${ko('tbResetAsk')}`) !== 'DELETE') return;
-  const res = await fetch('/api/responses', { method: 'DELETE', headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json' }, body: JSON.stringify({ confirm: 'DELETE' }) });
-  if (res.ok) {
-    try { sessionStorage.setItem('tmc.key', key); } catch { /* ignore */ }
-    window.alert(`${en('tbResetDone')} · ${ko('tbResetDone')}`);
-    if (showResults) loadResults();
-  } else window.alert(en('tbKeyBad'));
-}
-
-function miniQuad(x, y, names, size = '') {
-  const q = (k) => `${en(k)}<small class="ko">${ko(k)}</small>`;
-  return `<div class="mq ${size}"><span class="mq-y">${en(y)} →</span>
-    <div class="mq-grid"><div class="np">${q(names[1])}</div><div class="mp">${q(names[0])}</div><div class="nn">${q(names[3])}</div><div class="mf">${q(names[2])}</div></div>
-    <span class="mq-x">${en(x)} →</span></div>`;
-}
-
 // ------------------------------------------------------------------ hub & spoke
+// You and TrustMyChef on columns 1–3, the wires across column 4, the restaurant cards on 5–8 and what each
+// owner sees on 9–12 (or a side card there). Rows shrink with the number of places (up to 5).
 const WIRE = { plan: 'w-plan', sending: 'w-live', sent: 'w-live', seen: 'w-live', typing: 'w-live', calling: 'w-live', ringing: 'w-live', oncall: 'w-live', yes: 'w-yes', no: 'w-no', noanswer: 'w-off', cancelled: 'w-off' };
 const PILL = {
   plan: ['wait', 'pvNotSent'], sending: ['wait', 'stSending'], sent: ['wait', 'stSent'], seen: ['wait', 'stSeen'], typing: ['live', 'stTyping'],
@@ -486,24 +515,28 @@ const PILL = {
   noanswer: ['off', 'stNoAnswer'], cancelled: ['off', 'stCancelled'],
 };
 
-function hub(rows, { st, sample, owner = true } = {}) {
+function hub(rows, { st, owner = true, avail = BODY_H, side = '' } = {}) {
   const n = rows.length;
-  const H = n * ROW_H + (n - 1) * ROW_GAP;
-  const mid = H / 2;
+  const rowH = Math.min(ROW_MAX, Math.floor((avail - (n - 1) * GAP) / n));
+  const H = n * rowH + (n - 1) * GAP;
+  const hubH = Math.max(H, 2 * (NODE_H + LINE_H) + NODE_H); // TrustMyChef sits in the middle, You above it
+  const y0 = (hubH - H) / 2;
+  const mid = hubH / 2;
   const wires = rows.map((r, i) => {
-    const y = i * (ROW_H + ROW_GAP) + ROW_H / 2;
-    return `<path class="${WIRE[r.status] || 'w-plan'}" d="M0,${mid} C46,${mid} 34,${y} 80,${y}"/>`;
+    const y = y0 + i * (rowH + GAP) + rowH / 2;
+    return `<path class="${WIRE[r.status] || 'w-plan'}" d="M0,${mid} C${WIRE_W / 2},${mid} ${WIRE_W / 2},${y} ${WIRE_W},${y}"/>`;
   }).join('');
   const elapsed = st ? mmss(st.endedAt ?? S.match?.elapsed?.() ?? 0) : '';
   return `
-    <div class="hub ${sample ? 'sample' : ''} ${owner ? '' : 'no-owner'}" style="--h:${Math.max(H, 180)}px">
+    <div class="hub ${owner ? '' : 'no-owner'} ${rowH < COMPACT ? 'compact' : ''}" style="height:${hubH}px;--row:${rowH}px">
       <div class="hub-left">
         <div class="node-you"><span class="ava">${icon('users')}</span><div><b>${en('pvYou')} <span class="ko-inline">${ko('pvYou')}</span></b><small>${en('pvYouLine', { n: S.party, when: en(whenKey()) })}</small></div></div>
         <i class="hub-v"></i>
-        <div class="node-hub"><span class="brand-mark">${icon('chef')}</span><div><b>TrustMyChef</b><small>${st ? `<span id="pv-elapsed">${elapsed}</span>` : `${en('pvHubLine')}`}</small></div></div>
+        <div class="node-hub"><span class="brand-mark">${icon('chef')}</span><div><b>TrustMyChef</b><small>${st ? `<span id="pv-elapsed">${elapsed}</span>` : en('pvHubLine')}</small></div></div>
       </div>
-      <svg class="hub-wires" viewBox="0 0 80 ${H}" preserveAspectRatio="none" style="height:${H}px" aria-hidden="true">${wires}</svg>
-      <ol class="hub-right" style="height:${H}px">${rows.map((r) => nodeHtml(r, st, owner)).join('')}</ol>
+      <svg class="hub-wires" viewBox="0 0 ${WIRE_W} ${hubH}" width="${WIRE_W}" height="${hubH}" aria-hidden="true">${wires}</svg>
+      <ol class="hub-right">${rows.map((r) => nodeHtml(r, st, owner)).join('')}</ol>
+      ${side ? `<aside class="hub-side">${side}</aside>` : ''}
     </div>`;
 }
 
@@ -512,7 +545,7 @@ function nodeHtml(r, st, owner = true) {
   const [cls, key] = PILL[r.status] || PILL.plan;
   const win = st && st.winner === r.id;
   const tr = trust(p);
-  return `<li class="pv-node s-${r.status} ${win ? 'win' : ''}" style="height:${ROW_H}px">
+  return `<li class="pv-node s-${r.status} ${win ? 'win' : ''}">
     <div class="pv-card">
       <img src="${p.img['480']}" alt="">
       <div class="pv-card-txt">
@@ -526,23 +559,28 @@ function nodeHtml(r, st, owner = true) {
   </li>`;
 }
 
-// what the owner's phone shows: a DM with Yes/No buttons, or an incoming AI call with a keypad
+// what the owner's phone shows, in at most three lines: caption (+ live state on the right) · the request ·
+// the buttons (a DM with Yes/No, or an AI call answered on the keypad). Low rows drop the middle line.
 function ownerHtml(r) {
   const s = r.status;
-  const cap = `${en('pvOwnerSees')} · ${ko('pvOwnerSees')}`;
-  if (r.channel === 'dm') {
-    const idle = s === 'plan' || s === 'sending';
-    const body = idle ? `<em>${en('pvNotSent')}</em>`
-      : s === 'cancelled' ? `<em class="strike">${en('pvReq')}</em><em>${en('stCancelled')}</em>`
-        : `<b>${en('pvReq')} · ${en('pvYouLine', { n: S.party, when: en(whenKey()) })}</b>
-           <div class="ow-btns"><span class="${s === 'yes' ? 'on yes' : ''}">${en('dmYesBtn')}</span><span class="${s === 'no' ? 'on no' : ''}">${en('dmNoBtn')}</span></div>
-           ${s === 'typing' ? `<small class="ow-note">${en('stTyping')} <span class="typing"><i></i><i></i><i></i></span></small>` : s === 'noanswer' ? `<small class="ow-note">${en('stNoAnswer')}</small>` : ''}`;
-    return `<div class="pv-owner"><span class="ow-cap">${icon('chat', 'xs')}${cap}</span>${body}</div>`;
+  const dm = r.channel === 'dm';
+  let state = '';
+  if (s === 'typing') state = `${en('stTyping')} <span class="typing"><i></i><i></i><i></i></span>`;
+  else if (s === 'calling' || s === 'ringing') state = `<span class="wave"><i></i><i></i><i></i><i></i></span> ${en('stRinging')}`;
+  else if (s === 'noanswer') state = en('stNoAnswer');
+  else if (s === 'cancelled') state = en('stCancelled');
+  let msg = '';
+  let btns = '';
+  if (s === 'plan' || s === 'sending') msg = `<em>${en('pvNotSent')}</em>`;
+  else if (s === 'cancelled') msg = `<em class="strike">${dm ? en('pvReq') : en('pvIncoming')}</em>`;
+  else if (!dm && s === 'noanswer') msg = `<b class="ow-msg">${en('pvMissed')}</b>`;
+  else {
+    msg = `<b class="ow-msg">${dm ? `${en('pvReq')} · ${en('pvYouLine', { n: S.party, when: en(whenKey()) })}` : en('pvIncoming')}</b>`;
+    if (dm) btns = `<div class="ow-btns"><span class="${s === 'yes' ? 'on yes' : ''}">${en('dmYesBtn')}</span><span class="${s === 'no' ? 'on no' : ''}">${en('dmNoBtn')}</span></div>`;
+    else if (s !== 'calling' && s !== 'ringing') btns = `<div class="ow-btns"><span class="${s === 'yes' ? 'on yes' : ''}">1 · ${en('pvYesShort')}</span><span class="${s === 'no' ? 'on no' : ''}">2 · ${en('pvNoShort')}</span></div>`;
   }
-  const body = s === 'plan' ? `<em>${en('pvNotSent')}</em>`
-    : s === 'noanswer' ? `<b>${en('pvMissed')}</b>`
-      : s === 'cancelled' ? `<em>${en('callEnd')}</em>`
-        : `<b>${en('pvIncoming')}</b>${s === 'calling' || s === 'ringing' ? `<small class="ow-note"><span class="wave"><i></i><i></i><i></i><i></i></span> ${en('stRinging')}</small>`
-          : `<div class="ow-btns keypad"><span class="${s === 'yes' ? 'on yes' : ''}">1 · ${en('pvYesShort')}</span><span class="${s === 'no' ? 'on no' : ''}">2 · ${en('pvNoShort')}</span></div>`}`;
-  return `<div class="pv-owner call"><span class="ow-cap">${icon('phone', 'xs')}${cap}</span>${body}</div>`;
+  return `<div class="pv-owner ${dm ? '' : 'call'} ${btns ? 'has-btns' : ''}">
+    <div class="ow-top"><span class="ow-cap">${icon(dm ? 'chat' : 'phone', 'xs')}${en('pvOwnerSees')} · ${ko('pvOwnerSees')}</span>${state ? `<span class="ow-state">${state}</span>` : ''}</div>
+    ${msg}${btns}
+  </div>`;
 }
