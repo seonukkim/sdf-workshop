@@ -18,7 +18,16 @@ const T = {
     mp: 'Worth paying for', np: 'Would pay, but not convenient', mf: 'Good, but should be free', nn2: 'Not useful',
     noData: 'No responses yet.',
     xConv: 'How convenient', yPay: 'Would pay',
-    list: 'Every answer · delete one by one', toList: 'Delete one by one ↓', recorded: 'Recorded (KST)', del: 'Delete', delAsk: 'Delete this answer? (for test runs)', grp: 'Group', ages: 'Age', sub: 'Subscribe', rates: 'Ratings 1–4 (conv/pay)',
+    list: 'Every answer · tick to delete', toList: 'Select & delete ↓', recorded: 'Recorded (KST)',
+    selOne: 'Select the answer recorded {time}', selAllA: 'Select all answers shown', selCount: '{n} of {total} selected',
+    selHint: 'Tick the answers to delete. The box at the top selects all.', delSel: 'Delete selected ({n})',
+    delSelTitle: 'Delete {n} selected answers?', delSelOk: 'Delete {n}',
+    delSelBody: 'They are removed from the server and cannot be brought back. Download CSV or XLSX first if you need a copy.',
+    deletedN: '{n} answers deleted.', deletedSome: 'Deleted {n} of {total}. Try again for the rest.',
+    ovTitle: 'At a glance', ovTime: 'Answers over time (KST)', ovTimeSub: 'Running total · first {a}, last {b} · each dot is one answer',
+    tlTip: '{n} answers · {time} · {g}', ovSub: 'Would subscribe after booking? (₩2,500/month)', ovItems: 'Average per screen (1–10)',
+    ovPay: 'Would pay for the whole service (1–10)', payTip: '{n} people gave {v}', payHigh: '6–10 (would pay)', median: 'median {v}',
+    ovDur: 'How long it took', ovChoose: 'Picking places', ovYes: 'Until the first Yes', onePerson: 'one person', del: 'Delete', delAsk: 'Delete this answer? (for test runs)', grp: 'Group', ages: 'Age', sub: 'Subscribe', rates: 'Ratings 1–4 (conv/pay)',
     bSubPre: 'Would subscribe (₩2,500/mo)? · Before trying', bSubPost: 'Would subscribe (₩2,500/mo)? · After booking',
     bShift: 'Change after trying', up: 'More willing', same: 'Same', down: 'Less willing', yes: 'Yes', maybe: 'Maybe', no: 'No', teaching: 'Teaching',
     bResult: 'Result in the prototype', booked: 'Booked', none: 'No one said Yes', stopped: 'Stopped', notTried: 'Did not try',
@@ -54,7 +63,16 @@ const T = {
     mp: '돈 낼 만해요', np: '돈은 내겠지만 불편해요', mf: '좋지만 무료여야 해요', nn2: '필요 없어요',
     noData: '아직 응답이 없어요.',
     xConv: '편리함', yPay: '지불 의향',
-    list: '전체 응답 · 하나씩 삭제', toList: '하나씩 삭제 ↓', recorded: '기록 시각 (KST)', del: '삭제', delAsk: '이 응답을 삭제할까요? (테스트용)', grp: '모둠', ages: '나이', sub: '구독', rates: '평가 1–4 (편리/지불)',
+    list: '전체 응답 · 체크해서 삭제', toList: '선택해서 삭제 ↓', recorded: '기록 시각 (KST)',
+    selOne: '{time} 응답 선택', selAllA: '보이는 응답 모두 선택', selCount: '{total}개 중 {n}개 선택',
+    selHint: '지울 응답을 체크하세요. 맨 위 칸을 누르면 모두 선택돼요.', delSel: '선택 삭제 ({n})',
+    delSelTitle: '선택한 응답 {n}개를 지울까요?', delSelOk: '{n}개 삭제',
+    delSelBody: '서버에서 지워지고 되돌릴 수 없어요. 필요하면 먼저 CSV나 XLSX로 받아 두세요.',
+    deletedN: '응답 {n}개를 지웠어요.', deletedSome: '{total}개 중 {n}개를 지웠어요. 나머지는 다시 시도해 주세요.',
+    ovTitle: '한눈에 보기', ovTime: '시간대별 응답 (KST)', ovTimeSub: '누적 응답 · 처음 {a}, 마지막 {b} · 점 하나가 응답 하나',
+    tlTip: '응답 {n}개 · {time} · {g}', ovSub: '예약 뒤 구독 의향 (월 ₩2,500)', ovItems: '화면별 평균 (1–10)',
+    ovPay: '서비스 전체 지불 의향 분포 (1–10)', payTip: '{v}점 {n}명', payHigh: '6–10점 (지불 의향 있음)', median: '중앙값 {v}',
+    ovDur: '걸린 시간', ovChoose: '식당 고르기', ovYes: '첫 수락까지', onePerson: '한 사람', del: '삭제', delAsk: '이 응답을 삭제할까요? (테스트용)', grp: '모둠', ages: '나이', sub: '구독', rates: '평가 1–4 (편리/지불)',
     bSubPre: '구독(월 ₩2,500) 의향 · 써 보기 전', bSubPost: '구독(월 ₩2,500) 의향 · 예약한 뒤',
     bShift: '써 본 뒤 변화', up: '더 긍정적', same: '같음', down: '더 부정적', yes: '네', maybe: '잘 모르겠어요', no: '아니요', teaching: 'Teaching',
     bResult: '프로토타입 결과', booked: '예약 완료', none: '수락 없음', stopped: '중간 취소', notTried: '사용 안 함',
@@ -88,7 +106,11 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '
 const $ = (s) => document.querySelector(s);
 
 const ITEMS = ['s1', 's2', 's3', 's4'];
-const QCOLOR = { mp: '#CC4410', np: '#8E6AD6', mf: '#0E9F6E', nn: '#A39B93' };
+// one warm family for every chart: ColorBrewer "Oranges" steps + warm stone grays (checked with the dataviz validator)
+const QCOLOR = { mp: '#E6550D', np: '#9A3412', mf: '#F59A57', nn: '#A8A29E' };
+const QTINT = { mp: '#FEEDDE', np: '#F5E8E0', mf: '#FFF7EF', nn: '#FAFAF9' };
+// numbers inside a dot: white on the dark steps, ink on the light ones
+const onFill = (c) => (['#F59A57', '#A8A29E'].includes(c) ? '#1C1A19' : '#fff');
 const quad = (x, y) => (x == null || y == null ? null : x >= 6 ? (y >= 6 ? 'mp' : 'mf') : (y >= 6 ? 'np' : 'nn'));
 const qName = (q) => t(q === 'nn' ? 'nn2' : q);
 const mean = (a) => (a.length ? a.reduce((s, v) => s + v, 0) / a.length : null);
@@ -194,9 +216,9 @@ function matrix({ means = [], dots = [], xLabel, yLabel, size = 440 }) {
   const mid = pad + inner / 2, midY = 18 + inner / 2;
   let s = `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard Variable, sans-serif" role="img" aria-label="${esc(xLabel)} × ${esc(yLabel)}">`;
   s += `<rect x="${pad}" y="18" width="${inner}" height="${inner}" fill="#fff" stroke="#DCD6CE"/>`;
-  s += `<rect x="${mid}" y="18" width="${inner / 2}" height="${inner / 2}" fill="#FFF1EA"/>`;
-  s += `<rect x="${mid}" y="${midY}" width="${inner / 2}" height="${inner / 2}" fill="#F1FAF6"/>`;
-  s += `<rect x="${pad}" y="18" width="${inner / 2}" height="${inner / 2}" fill="#F7F3FD"/>`;
+  s += `<rect x="${mid}" y="18" width="${inner / 2}" height="${inner / 2}" fill="${QTINT.mp}"/>`;
+  s += `<rect x="${mid}" y="${midY}" width="${inner / 2}" height="${inner / 2}" fill="${QTINT.mf}"/>`;
+  s += `<rect x="${pad}" y="18" width="${inner / 2}" height="${inner / 2}" fill="${QTINT.np}"/>`;
   for (let v = 1; v <= 10; v++) {
     s += `<text x="${X(v)}" y="${18 + inner + 16}" font-size="10.5" fill="#8A827B" text-anchor="middle">${v}</text>`;
     s += `<text x="${pad - 8}" y="${Y(v) + 3.5}" font-size="10.5" fill="#8A827B" text-anchor="end">${v}</text>`;
@@ -204,8 +226,8 @@ function matrix({ means = [], dots = [], xLabel, yLabel, size = 440 }) {
   s += `<line x1="${mid}" y1="18" x2="${mid}" y2="${18 + inner}" stroke="#A39B93" stroke-dasharray="4 4"/>`;
   s += `<line x1="${pad}" y1="${midY}" x2="${pad + inner}" y2="${midY}" stroke="#A39B93" stroke-dasharray="4 4"/>`;
   const lab = (x, y, txt, anchor, color) => `<text x="${x}" y="${y}" font-size="11.5" font-weight="750" fill="${color}" text-anchor="${anchor}">${esc(txt)}</text>`;
-  s += lab(pad + inner - 8, 34, qName('mp'), 'end', QCOLOR.mp) + lab(pad + 8, 34, qName('np'), 'start', '#6A44B8')
-    + lab(pad + inner - 8, 18 + inner - 10, qName('mf'), 'end', '#067A55') + lab(pad + 8, 18 + inner - 10, qName('nn'), 'start', '#8A827B');
+  s += lab(pad + inner - 8, 34, qName('mp'), 'end', '#5B5550') + lab(pad + 8, 34, qName('np'), 'start', '#5B5550')
+    + lab(pad + inner - 8, 18 + inner - 10, qName('mf'), 'end', '#5B5550') + lab(pad + 8, 18 + inner - 10, qName('nn'), 'start', '#8A827B');
   s += `<text x="${pad + inner / 2}" y="${h - 4}" font-size="12" font-weight="700" fill="#5B5550" text-anchor="middle">${esc(xLabel)} (1–10) →</text>`;
   s += `<text x="13" y="${18 + inner / 2}" font-size="12" font-weight="700" fill="#5B5550" text-anchor="middle" transform="rotate(-90 13 ${18 + inner / 2})">${esc(yLabel)} (1–10) →</text>`;
   // individual answers: deterministic jitter so dots on the same cell stay visible
@@ -214,7 +236,7 @@ function matrix({ means = [], dots = [], xLabel, yLabel, size = 440 }) {
     s += `<circle cx="${X(d.x) + jx}" cy="${Y(d.y) + jy}" r="4.2" fill="${d.color}" fill-opacity=".38" stroke="${d.color}" stroke-opacity=".7"><title>${esc(d.title || '')}</title></circle>`;
   });
   means.forEach((m) => {
-    s += `<g><circle cx="${X(m.x)}" cy="${Y(m.y)}" r="14" fill="${m.color || QCOLOR.mp}" stroke="#fff" stroke-width="2.5"><title>${esc(m.title || '')}</title></circle><text x="${X(m.x)}" y="${Y(m.y) + 4.5}" font-size="12" font-weight="800" fill="#fff" text-anchor="middle">${esc(m.label)}</text></g>`;
+    s += `<g><circle cx="${X(m.x)}" cy="${Y(m.y)}" r="14" fill="${m.color || QCOLOR.mp}" stroke="#fff" stroke-width="2.5"><title>${esc(m.title || '')}</title></circle><text x="${X(m.x)}" y="${Y(m.y) + 4.5}" font-size="12" font-weight="800" fill="${onFill(m.color || QCOLOR.mp)}" text-anchor="middle">${esc(m.label)}</text></g>`;
   });
   return s + '</svg>';
 }
@@ -335,8 +357,8 @@ function miniMatrix(items) {
   const X = (v) => p + ((v - 0.5) / 10) * inner;
   const Y = (v) => p + inner - ((v - 0.5) / 10) * inner;
   let s = `<svg viewBox="0 0 ${S} ${S}" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard Variable, sans-serif" role="img" aria-label="${esc(t('xConv'))} × ${esc(t('yPay'))}">`;
-  s += `<rect x="${p}" y="${p}" width="${inner / 2}" height="${inner / 2}" fill="#F7F3FD"/><rect x="${mid}" y="${p}" width="${inner / 2}" height="${inner / 2}" fill="#FFF1EA"/>`;
-  s += `<rect x="${p}" y="${mid}" width="${inner / 2}" height="${inner / 2}" fill="#FBFAF8"/><rect x="${mid}" y="${mid}" width="${inner / 2}" height="${inner / 2}" fill="#F1FAF6"/>`;
+  s += `<rect x="${p}" y="${p}" width="${inner / 2}" height="${inner / 2}" fill="${QTINT.np}"/><rect x="${mid}" y="${p}" width="${inner / 2}" height="${inner / 2}" fill="${QTINT.mp}"/>`;
+  s += `<rect x="${p}" y="${mid}" width="${inner / 2}" height="${inner / 2}" fill="${QTINT.nn}"/><rect x="${mid}" y="${mid}" width="${inner / 2}" height="${inner / 2}" fill="${QTINT.mf}"/>`;
   s += `<rect x="${p}" y="${p}" width="${inner}" height="${inner}" fill="none" stroke="#DCD6CE"/>`;
   s += `<line x1="${mid}" y1="${p}" x2="${mid}" y2="${p + inner}" stroke="#A39B93" stroke-dasharray="3 3"/><line x1="${p}" y1="${mid}" x2="${p + inner}" y2="${mid}" stroke="#A39B93" stroke-dasharray="3 3"/>`;
   // items with the same average would hide each other: try spots around the average, inside the box
@@ -351,7 +373,7 @@ function miniMatrix(items) {
       if (!placed.some((q) => Math.abs(q.x - x) < 20 && Math.abs(q.y - y) < 20)) { cx = x; cy = y; break; }
     }
     placed.push({ x: cx, y: cy });
-    s += `<g><circle cx="${cx}" cy="${cy}" r="11" fill="${QCOLOR[meanQuad(m)] || QCOLOR.mp}" stroke="#fff" stroke-width="2"><title>${esc(t(`s${i + 1}s`))}: ${f1(m.x)} / ${f1(m.y)}</title></circle><text x="${cx}" y="${cy + 4}" font-size="11.5" font-weight="800" fill="#fff" text-anchor="middle">${i + 1}</text></g>`;
+    s += `<g><circle cx="${cx}" cy="${cy}" r="11" fill="${QCOLOR[meanQuad(m)] || QCOLOR.mp}" stroke="#fff" stroke-width="2"><title>${esc(t(`s${i + 1}s`))}: ${f1(m.x)} / ${f1(m.y)}</title></circle><text x="${cx}" y="${cy + 4}" font-size="11.5" font-weight="800" fill="${onFill(QCOLOR[meanQuad(m)] || QCOLOR.mp)}" text-anchor="middle">${i + 1}</text></g>`;
   });
   return s + '</svg>';
 }
@@ -384,6 +406,201 @@ function compareSection(rows) {
   $('#cmp-note').textContent = t('cmpNote');
 }
 
+// ------------------------------------------------------------------ at a glance
+// All warm: brand orange = the money side (would pay, subscribe yes), deep orange = convenient (pair passes the
+// dataviz validator: CVD ΔE 14.8, normal ΔE 17.4, contrast ≥ 3:1). Subscribe answers are ordered: orange yes · light
+// orange maybe · warm gray no.
+// Thin marks, hairline solid grid, values at bar tips, tooltips on hover and focus.
+const VC = { pay: '#E6550D', payFill: 'rgba(230, 85, 13, .14)', conv: '#9A3412', yes: '#E6550D', maybe: '#F59A57', no: '#A8A29E', low: '#D6D3D1', grid: '#ECE8E2', axis: '#8A827B', ink: '#1C1A19', ink2: '#5B5550', dot: '#78716C' };
+const FONT = 'font-family="Pretendard Variable, sans-serif"';
+const tipAttr = (s) => `data-tip="${esc(s)}" tabindex="0" aria-label="${esc(s)}"`;
+const clock = (ms, sec) => new Date(ms).toLocaleTimeString('sv-SE', { timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit', ...(sec ? { second: '2-digit' } : {}) });
+const groupName = (g) => (g === 'teaching' ? t('teaching') : g ? t('groupN', { n: g }) : t('unknown'));
+const emptyFig = () => `<div class="ov-empty">${esc(t('noData'))}</div>`;
+const niceMax = (v) => { const steps = [1, 2, 4, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000]; return steps.find((s) => s >= v) || Math.ceil(v / 1000) * 1000; };
+// bars: 4px rounded data end, square at the baseline
+const hBar = (x0, x1, y, h, fill, extra = '') => {
+  const r = Math.min(4, (x1 - x0) / 2, h / 2);
+  if (x1 - x0 < 1) return '';
+  return `<path d="M${x0},${y} H${x1 - r} A${r},${r} 0 0 1 ${x1},${y + r} V${y + h - r} A${r},${r} 0 0 1 ${x1 - r},${y + h} H${x0} Z" fill="${fill}" ${extra}/>`;
+};
+const vBar = (x, w, yTop, yBase, fill, extra = '') => {
+  const r = Math.min(4, w / 2, (yBase - yTop) / 2);
+  if (yBase - yTop < 1) return '';
+  return `<path d="M${x},${yBase} V${yTop + r} A${r},${r} 0 0 1 ${x + r},${yTop} H${x + w - r} A${r},${r} 0 0 1 ${x + w},${yTop + r} V${yBase} Z" fill="${fill}" ${extra}/>`;
+};
+
+let TL = null; // the answers-over-time chart, kept for the hover crosshair
+function timelineChart(rows) {
+  const pts = rows.map((r) => ({ t: Date.parse(r.createdAt), g: r.group })).filter((p) => Number.isFinite(p.t)).sort((a, b) => a.t - b.t);
+  TL = null;
+  if (!pts.length) return emptyFig();
+  const W = 1100, H = 230, L = 40, R = 48, T = 16, B = 28;
+  const first = pts[0].t, last = pts[pts.length - 1].t;
+  const span = Math.max(last - first, 10 * 60e3); // show at least ten minutes
+  const t0 = first - span * 0.03, t1 = first + span * 1.03;
+  const n = pts.length, yMax = niceMax(n);
+  const X = (v) => L + ((v - t0) / (t1 - t0)) * (W - L - R);
+  const Y = (v) => T + (1 - v / yMax) * (H - T - B);
+  let s = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" ${FONT} role="img" aria-label="${esc(t('ovTime'))}">`;
+  [0, yMax / 2, yMax].forEach((v) => {
+    s += `<line x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}" stroke="${VC.grid}"/>`;
+    s += `<text x="${L - 8}" y="${Y(v) + 4}" font-size="12" fill="${VC.axis}" text-anchor="end">${v}</text>`;
+  });
+  const stepMin = [1, 2, 5, 10, 15, 30, 60, 120, 180, 360, 720, 1440].find((m) => (t1 - t0) / (m * 60e3) <= 7) || 1440;
+  for (let tk = Math.ceil(t0 / (stepMin * 60e3)) * stepMin * 60e3; tk <= t1; tk += stepMin * 60e3) {
+    s += `<text x="${X(tk)}" y="${H - 8}" font-size="12" fill="${VC.axis}" text-anchor="middle">${clock(tk)}</text>`;
+  }
+  // a running total stays flat until the next answer arrives, so the line steps (no false slope between answers)
+  const line = pts.map((p, i) => (i ? `H${X(p.t).toFixed(1)} V${Y(i + 1).toFixed(1)}` : `M${X(p.t).toFixed(1)},${Y(1).toFixed(1)}`)).join(' ');
+  s += `<path d="M${X(first).toFixed(1)},${Y(0)} ${line.replace(/^M/, 'L')} V${Y(0)} Z" fill="${VC.payFill}"/>`;
+  s += `<path d="${line}" fill="none" stroke="${VC.pay}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+  if (n <= 80) pts.forEach((p, i) => { s += `<circle cx="${X(p.t).toFixed(1)}" cy="${Y(i + 1).toFixed(1)}" r="4" fill="${VC.pay}" stroke="#fff" stroke-width="2"/>`; });
+  s += `<text x="${X(last) + 10}" y="${Y(n) + 4}" font-size="13" font-weight="800" fill="${VC.ink}">${n}</text>`;
+  s += `<line class="tl-cross" x1="0" x2="0" y1="${T}" y2="${H - B}" stroke="${VC.ink2}" visibility="hidden"/><circle class="tl-dot" r="6" fill="${VC.pay}" stroke="#fff" stroke-width="2" visibility="hidden"/>`;
+  s += `<rect class="tl-hit" x="${L}" y="${T}" width="${W - L - R}" height="${H - T - B}" fill="transparent"/>`;
+  TL = { pts, W, L, R, X, Y };
+  return s + '</svg>';
+}
+function timelineMark(i) {
+  const svg = $('#ov-time svg');
+  if (!svg) return;
+  const cross = svg.querySelector('.tl-cross'), dot = svg.querySelector('.tl-dot');
+  if (i == null || !TL) { cross?.setAttribute('visibility', 'hidden'); dot?.setAttribute('visibility', 'hidden'); return; }
+  const x = TL.X(TL.pts[i].t), y = TL.Y(i + 1);
+  cross.setAttribute('x1', x); cross.setAttribute('x2', x); cross.setAttribute('visibility', 'visible');
+  dot.setAttribute('cx', x); dot.setAttribute('cy', y); dot.setAttribute('visibility', 'visible');
+}
+// the crosshair finds the nearest answer in time; the reader never has to hit a 2px line
+function timelineHover(e) {
+  const svg = $('#ov-time svg');
+  if (!svg || !TL) return;
+  const r = svg.getBoundingClientRect();
+  const sx = ((e.clientX - r.left) / r.width) * TL.W;
+  if (sx < TL.L - 10 || sx > TL.W - TL.R + 10) { timelineMark(null); hideTip(); return; }
+  let best = 0;
+  TL.pts.forEach((p, i) => { if (Math.abs(TL.X(p.t) - sx) < Math.abs(TL.X(TL.pts[best].t) - sx)) best = i; });
+  timelineMark(best);
+  const p = TL.pts[best];
+  showTip(t('tlTip', { n: best + 1, time: clock(p.t, true), g: groupName(p.g) }), e.clientX, e.clientY);
+}
+
+function subscribeChart(rows) {
+  const subs = rows.map((r) => r.flow?.subPost).filter(Boolean);
+  if (!subs.length) return emptyFig();
+  const c = { yes: 0, maybe: 0, no: 0 };
+  subs.forEach((v) => { c[v] = (c[v] || 0) + 1; });
+  const W = 540, H = 40, gap = 2;
+  let x = 0, s = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" ${FONT} role="img" aria-label="${esc(t('ovSub'))}">`;
+  const keys = ['yes', 'maybe', 'no'].filter((k) => c[k]);
+  keys.forEach((k, i) => {
+    const w = (c[k] / subs.length) * (W - gap * (keys.length - 1));
+    s += `<rect x="${x.toFixed(1)}" y="4" width="${Math.max(1, w).toFixed(1)}" height="32" rx="${i === 0 || i === keys.length - 1 ? 4 : 0}" fill="${VC[k]}" ${tipAttr(`${pct(c[k], subs.length)} · ${t(k)} (${c[k]})`)}/>`;
+    x += w + gap;
+  });
+  s += '</svg>';
+  const legend = ['yes', 'maybe', 'no'].map((k) => `<span><i style="background:${VC[k]}"></i>${esc(t(k))} <b>${pct(c[k], subs.length)}</b> <small>(${c[k]})</small></span>`).join('');
+  // the same answers split by group, on the same colours
+  const groups = groupsBy(rows.filter((r) => r.flow?.subPost), 'group');
+  const split = groups.length > 1 ? `<div class="ov-split">${groups.map((g) => {
+    const s2 = statsOf(g.rows).sub;
+    return `<div class="ov-split-row" ${tipAttr(`${g.label} · ${t('subLine', { y: s2.yes, m: s2.maybe, n: s2.no })}`)}><span>${esc(g.label)}</span>${subBar(s2)}</div>`;
+  }).join('')}</div>` : '';
+  return `${s}<div class="ov-legend">${legend}</div>${split}`;
+}
+
+function itemBarsChart(rows) {
+  const st = statsOf(rows).items;
+  if (!st.some((it) => it.n)) return emptyFig();
+  const W = 540, L = 104, R = 44, T = 4, rowH = 50, H = T + rowH * 4 + 26;
+  const X = (v) => L + (v / 10) * (W - L - R);
+  let s = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" ${FONT} role="img" aria-label="${esc(t('ovItems'))}">`;
+  [0, 2, 4, 6, 8, 10].forEach((v) => {
+    s += `<line x1="${X(v)}" x2="${X(v)}" y1="${T}" y2="${T + rowH * 4}" stroke="${VC.grid}"/>`;
+    s += `<text x="${X(v)}" y="${H - 8}" font-size="12" fill="${VC.axis}" text-anchor="middle">${v}</text>`;
+  });
+  st.forEach((it, i) => {
+    const y = T + i * rowH;
+    s += `<text x="${L - 10}" y="${y + rowH / 2 + 4}" font-size="13" font-weight="700" fill="${VC.ink2}" text-anchor="end">${esc(t(`s${i + 1}s`))}</text>`;
+    [['conv', it.x, 9], ['pay', it.y, 25]].forEach(([k, v, dy]) => {
+      if (v == null) return;
+      const label = `${f1(v)} · ${t(k === 'conv' ? 'xConv' : 'yPay')} · ${t(`s${i + 1}s`)} (n ${it.n})`;
+      s += hBar(X(0), X(v), y + dy, 13, VC[k], tipAttr(label));
+      s += `<text x="${X(v) + 6}" y="${y + dy + 11}" font-size="12" font-weight="700" fill="${VC.ink2}">${f1(v)}</text>`;
+    });
+  });
+  s += '</svg>';
+  return `${s}<div class="ov-legend"><span><i style="background:${VC.conv}"></i>${esc(t('xConv'))}</span><span><i style="background:${VC.pay}"></i>${esc(t('yPay'))}</span></div>`;
+}
+
+// emphasis: scores 6–10 (would pay) in orange, 1–5 in gray
+function payHistChart(rows) {
+  const vals = rows.map((r) => r.ratings?.s4?.y).filter((v) => v != null);
+  if (!vals.length) return emptyFig();
+  const counts = Array.from({ length: 10 }, (_, i) => vals.filter((v) => v === i + 1).length);
+  const W = 540, H = 210, L = 12, R = 12, T = 22, B = 26;
+  const band = (W - L - R) / 10, bw = Math.min(24, band - 10);
+  const max = Math.max(...counts);
+  const Y = (c) => T + (1 - c / max) * (H - T - B);
+  let s = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" ${FONT} role="img" aria-label="${esc(t('ovPay'))}">`;
+  s += `<line x1="${L}" x2="${W - R}" y1="${H - B}" y2="${H - B}" stroke="${VC.grid}"/>`;
+  counts.forEach((c, i) => {
+    const x = L + i * band + (band - bw) / 2;
+    s += vBar(x, bw, Y(c), H - B, i >= 5 ? VC.pay : VC.low, tipAttr(t('payTip', { n: c, v: i + 1 })));
+    if (c) s += `<text x="${x + bw / 2}" y="${Y(c) - 6}" font-size="12" font-weight="700" fill="${VC.ink2}" text-anchor="middle">${c}</text>`;
+    s += `<text x="${x + bw / 2}" y="${H - 8}" font-size="12" fill="${VC.axis}" text-anchor="middle">${i + 1}</text>`;
+  });
+  s += '</svg>';
+  const high = vals.filter((v) => v >= 6).length;
+  return `${s}<div class="ov-legend"><span><i style="background:${VC.pay}"></i>${esc(t('payHigh'))} <b>${pct(high, vals.length)}</b></span><span><i style="background:${VC.low}"></i>1–5</span><span>${esc(t('median', { v: f1(median(vals)) }))}</span></div>`;
+}
+
+// each dot is one person; the dark tick is the median
+function durationChart(rows) {
+  const tried = rows.filter((r) => r.flow?.tried);
+  const lanes = [['ovChoose', tried.map((r) => r.flow?.chooseSec).filter((v) => v != null)], ['ovYes', tried.map((r) => r.flow?.timeToYesSec).filter((v) => v != null)]];
+  if (!lanes.some(([, v]) => v.length)) return emptyFig();
+  const W = 540, L = 132, R = 56, laneH = 64;
+  const H = lanes.length * laneH;
+  let s = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" ${FONT} role="img" aria-label="${esc(t('ovDur'))}">`;
+  lanes.forEach(([k, vals], li) => {
+    const y = li * laneH + 22;
+    s += `<text x="${L - 12}" y="${y + 4}" font-size="13" font-weight="700" fill="${VC.ink2}" text-anchor="end">${esc(t(k))}</text>`;
+    if (!vals.length) { s += `<text x="${L}" y="${y + 4}" font-size="12" fill="${VC.axis}">–</text>`; return; }
+    const max = niceMax(Math.max(...vals, 1));
+    const X = (v) => L + (v / max) * (W - L - R);
+    s += `<line x1="${L}" x2="${W - R}" y1="${y}" y2="${y}" stroke="${VC.grid}"/>`;
+    s += `<text x="${L}" y="${y + 26}" font-size="11.5" fill="${VC.axis}">0</text><text x="${W - R}" y="${y + 26}" font-size="11.5" fill="${VC.axis}" text-anchor="end">${max}${t('sec')}</text>`;
+    vals.forEach((v, i) => {
+      const jy = ((i * 37) % 9) - 4;
+      s += `<circle cx="${X(v).toFixed(1)}" cy="${y + jy}" r="4.5" fill="${VC.dot}" fill-opacity=".55" stroke="#fff" stroke-width="2" ${tipAttr(`${v}${t('sec')} · ${t(k)}`)}/>`;
+    });
+    const md = median(vals);
+    s += `<line x1="${X(md)}" x2="${X(md)}" y1="${y - 12}" y2="${y + 12}" stroke="${VC.ink}" stroke-width="2.5" stroke-linecap="round"/>`;
+    s += `<text x="${W - R + 8}" y="${y + 4}" font-size="12.5" font-weight="800" fill="${VC.ink}">${f1(md)}${t('sec')}</text>`;
+  });
+  return `${s}</svg><div class="ov-legend"><span><i class="tick"></i>${esc(t('median', { v: '' }).trim())}</span><span><i class="dot"></i>${esc(t('onePerson'))}</span></div>`;
+}
+
+function overviewSection(rows) {
+  $('#ov-time').innerHTML = timelineChart(rows);
+  $('#ov-sub').innerHTML = subscribeChart(rows);
+  $('#ov-items').innerHTML = itemBarsChart(rows);
+  $('#ov-pay').innerHTML = payHistChart(rows);
+  $('#ov-dur').innerHTML = durationChart(rows);
+  const times = rows.map((r) => Date.parse(r.createdAt)).filter(Number.isFinite);
+  $('#ov-time-sub').textContent = times.length ? t('ovTimeSub', { a: clock(Math.min(...times)), b: clock(Math.max(...times)) }) : '';
+}
+function showTip(text, x, y) {
+  const el = $('#rs-tip');
+  el.textContent = text;
+  el.hidden = false;
+  const w = el.offsetWidth, h = el.offsetHeight;
+  el.style.left = `${Math.min(window.innerWidth - w - 8, Math.max(8, x + 14))}px`;
+  el.style.top = `${Math.max(8, y - h - 12)}px`;
+}
+function hideTip() { const el = $('#rs-tip'); if (el) el.hidden = true; }
+
 function draw() {
   document.documentElement.lang = lang;
   document.querySelectorAll('[data-t]').forEach((el) => { el.textContent = t(el.dataset.t); });
@@ -395,6 +612,7 @@ function draw() {
     ['#chartA', '#tableA', '#behavior', '#profile'].forEach((s) => { $(s).innerHTML = ''; });
     $('#tableA').innerHTML = `<div class="empty-state">${t('noData')}</div>`;
   }
+  overviewSection(rows);
   compareSection(rows);
   screensSection(rows, $('#dotsA').checked);
   behaviorSection(rows);
@@ -402,29 +620,81 @@ function draw() {
   listSection(rows);
 }
 
-// every answer with the time it was recorded; single rows can be deleted (test runs)
+// every answer with the time it was recorded; tick one, several or all, then delete the ticked ones
 const kst = (iso) => (iso ? new Date(iso).toLocaleString('sv-SE', { timeZone: 'Asia/Seoul' }).slice(0, 16) : '–');
+const SELECTED = new Set(); // survives the 10-second live refresh
+const TRASH = '<svg class="ic sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6"/></svg>';
 function listSection(rows) {
+  const ids = new Set(ROWS.map((r) => r.id));
+  [...SELECTED].forEach((id) => { if (!ids.has(id)) SELECTED.delete(id); });
   const subTxt = (v) => (v ? t(v) : '–');
-  const body = [...rows].reverse().map((r) => `<tr>
+  const body = [...rows].reverse().map((r) => {
+    const on = SELECTED.has(r.id);
+    return `<tr class="${on ? 'sel' : ''}">
+    <td class="chk"><input type="checkbox" data-sel="${esc(r.id)}" ${on ? 'checked' : ''} aria-label="${esc(t('selOne', { time: kst(r.createdAt) }))}"></td>
     <td class="num">${kst(r.createdAt)}</td><td>${esc(r.group === 'teaching' ? t('teaching') : r.group || '–')}</td>
     <td>${esc(r.profile?.gender ? t(r.profile.gender) : '–')}</td><td class="num">${r.profile?.age ?? '–'}</td>
     <td>${subTxt(r.flow?.subPost)}</td>
-    <td class="num">${ITEMS.map((k) => `${r.ratings?.[k]?.x ?? '–'}/${r.ratings?.[k]?.y ?? '–'}`).join(' · ')}</td>
-    <td><button class="btn btn-line btn-sm danger rs-del" data-del="${esc(r.id)}"><svg class="ic sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6"/></svg>${t('del')}</button></td></tr>`).join('');
+    <td class="num">${ITEMS.map((k) => `${r.ratings?.[k]?.x ?? '–'}/${r.ratings?.[k]?.y ?? '–'}`).join(' · ')}</td></tr>`;
+  }).join('');
   $('#list').innerHTML = rows.length
-    ? `<table class="rs-t"><thead><tr><th>${t('recorded')}</th><th>${t('grp')}</th><th>${t('gender')}</th><th class="num">${t('ages')}</th><th>${t('sub')}</th><th class="num">${t('rates')}</th><th></th></tr></thead><tbody>${body}</tbody></table>`
+    ? `<div class="list-tools"><span class="sel-count" id="selCount"></span><button class="btn btn-sm rs-wipe" id="delSel" disabled>${TRASH}<span></span></button></div>
+      <table class="rs-t"><thead><tr><th class="chk"><input type="checkbox" id="selAll" aria-label="${esc(t('selAllA'))}"></th><th>${t('recorded')}</th><th>${t('grp')}</th><th>${t('gender')}</th><th class="num">${t('ages')}</th><th>${t('sub')}</th><th class="num">${t('rates')}</th></tr></thead><tbody>${body}</tbody></table>`
     : `<div class="empty-state">${t('noData')}</div>`;
+  syncSelection(rows);
 }
-$('#list').addEventListener('click', async (e) => {
-  const b = e.target.closest('[data-del]');
-  if (!b) return;
-  const r = ROWS.find((x) => x.id === b.dataset.del);
-  const g = r?.group === 'teaching' ? t('teaching') : r?.group || '–';
-  if (!(await confirmBox({ title: t('delTitle'), body: t('delBody', { time: kst(r?.createdAt), g }), ok: t('del') }))) return;
-  const res = await fetch(`/api/responses?id=${encodeURIComponent(b.dataset.del)}`, { method: 'DELETE', headers: { authorization: `Bearer ${KEY}` } });
-  if (res.ok) { notice(t('deleted')); load(); }
+// only answers you can see (after filters) count, so a filter never deletes hidden answers
+function visibleSelection(rows = filtered()) { return rows.map((r) => r.id).filter((id) => SELECTED.has(id)); }
+function syncSelection(rows = filtered()) {
+  const n = visibleSelection(rows).length;
+  const all = $('#selAll');
+  if (all) { all.checked = n > 0 && n === rows.length; all.indeterminate = n > 0 && n < rows.length; }
+  const c = $('#selCount');
+  if (c) c.textContent = n ? t('selCount', { n, total: rows.length }) : t('selHint');
+  const b = $('#delSel');
+  if (b) { b.disabled = !n; b.querySelector('span').textContent = t('delSel', { n }); }
+}
+$('#list').addEventListener('change', (e) => {
+  if (e.target.id === 'selAll') {
+    filtered().forEach((r) => (e.target.checked ? SELECTED.add(r.id) : SELECTED.delete(r.id)));
+    document.querySelectorAll('#list [data-sel]').forEach((c) => { c.checked = SELECTED.has(c.dataset.sel); c.closest('tr').classList.toggle('sel', c.checked); });
+  } else {
+    const c = e.target.closest('[data-sel]');
+    if (!c) return;
+    if (c.checked) SELECTED.add(c.dataset.sel); else SELECTED.delete(c.dataset.sel);
+    c.closest('tr').classList.toggle('sel', c.checked);
+  }
+  syncSelection();
 });
+$('#list').addEventListener('click', (e) => { if (e.target.closest('#delSel')) deleteSelected(); });
+
+// deleting needs the key (the list only exists after it) and a second yes in the pop-up
+async function deleteSelected() {
+  const ids = visibleSelection();
+  const n = ids.length;
+  if (!n) return;
+  const everything = n === ROWS.length;
+  const ok = await confirmBox({
+    title: everything ? t('wipeTitle', { n }) : t('delSelTitle', { n }),
+    body: everything ? t('wipeBody') : t('delSelBody'),
+    ok: everything ? t('wipeOk', { n }) : t('delSelOk', { n }),
+  });
+  if (!ok) return;
+  const auth = { authorization: `Bearer ${KEY}` };
+  let done = 0;
+  if (everything) {
+    const res = await fetch('/api/responses', { method: 'DELETE', headers: { ...auth, 'content-type': 'application/json' }, body: JSON.stringify({ confirm: 'DELETE' }) });
+    if (res.ok) done = n;
+  } else {
+    for (const id of ids) {
+      const res = await fetch(`/api/responses?id=${encodeURIComponent(id)}`, { method: 'DELETE', headers: auth });
+      if (res.ok) done += 1;
+    }
+  }
+  ids.forEach((id) => SELECTED.delete(id));
+  notice(done === n ? t('deletedN', { n }) : t('deletedSome', { n: done, total: n }));
+  load();
+}
 
 // ------------------------------------------------------------------ confirm pop-up + notice (in the page, not browser dialogs)
 function confirmBox({ title, body, ok }) {
@@ -532,14 +802,21 @@ $('#cmp-dims').addEventListener('click', (e) => {
   compareSection(filtered());
 });
 $('#lang').addEventListener('click', () => { lang = lang === 'ko' ? 'en' : 'ko'; if (ROWS.length || !$('#dash').hidden) draw(); else document.querySelectorAll('[data-t]').forEach((el) => { el.textContent = t(el.dataset.t); }); });
-// deleting everything needs the key (the buttons only exist after it) and a second yes in the pop-up
-$('#wipe').addEventListener('click', async () => {
-  const n = ROWS.length;
-  if (!n) { notice(t('noData')); return; }
-  if (!(await confirmBox({ title: t('wipeTitle', { n }), body: t('wipeBody'), ok: t('wipeOk', { n }) }))) return;
-  const res = await fetch('/api/responses', { method: 'DELETE', headers: { authorization: `Bearer ${KEY}`, 'content-type': 'application/json' }, body: JSON.stringify({ confirm: 'DELETE' }) });
-  if (res.ok) { notice(t('wiped')); load(); } else notice(t('badKey'));
+// tooltips for the charts: hover or keyboard focus shows the value (the tables keep every value too)
+document.addEventListener('pointermove', (e) => {
+  const m = e.target.closest?.('[data-tip]');
+  if (m) showTip(m.getAttribute('data-tip'), e.clientX, e.clientY);
+  else if (!e.target.closest?.('#ov-time svg')) hideTip();
 });
+document.addEventListener('focusin', (e) => {
+  const m = e.target.closest?.('[data-tip]');
+  if (!m) return;
+  const r = m.getBoundingClientRect();
+  showTip(m.getAttribute('data-tip'), r.left + r.width / 2, r.top);
+});
+document.addEventListener('focusout', hideTip);
+$('#ov-time').addEventListener('pointermove', timelineHover);
+$('#ov-time').addEventListener('pointerleave', () => { timelineMark(null); hideTip(); });
 
 document.querySelectorAll('[data-t]').forEach((el) => { el.textContent = t(el.dataset.t); });
 $('#lang').textContent = lang === 'ko' ? 'English' : '한국어';
