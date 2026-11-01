@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Design Board · TrustMyChef</title>
+<meta name="description" content="Design board for the TrustMyChef instant-booking workshop prototype: research, principles, tokens, grid, components, screens, Wizard-of-Oz setup and validation plan.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="/img/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="/css/app.css">
+<link rel="stylesheet" href="/css/board.css">
+</head>
+<body class="board">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-chef" viewBox="0 0 24 24"><path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6Z"/><path d="M6 17h12"/></symbol>
+    <symbol id="i-walk" viewBox="0 0 24 24"><circle cx="13.5" cy="4" r="2"/><path d="M11.5 8.5 10 14l-2.5 7M10 14l3.5 2.5L15 21M11.5 8.5 8 10.5 7 14M11.5 8.5l2.8 2.6 3.2.9"/></symbol>
+    <symbol id="i-chat" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></symbol>
+    <symbol id="i-bot" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4M8 16h.01M16 16h.01"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-text" viewBox="0 0 24 24"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></symbol>
+    <symbol id="i-ban" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+    <symbol id="i-utensils" viewBox="0 0 24 24"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2M7 2v20M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></symbol>
+  </defs>
+</svg>
+
+<header class="bd-top">
+  <a class="brand" href="/" style="text-decoration:none"><span class="brand-mark"><svg class="ic"><use href="#i-chef"/></svg></span>TrustMyChef</a>
+  <nav aria-label="Sections">
+    <a href="#direction">Direction</a><a href="#research">Research</a><a href="#principles">Principles</a><a href="#tokens">Tokens</a>
+    <a href="#grid">Grid</a><a href="#components">Components</a><a href="#screens">Screens</a><a href="#woz">Wizard of Oz</a><a href="#validation">Validation</a><a href="#copy">Copy</a>
+  </nav>
+</header>
+
+<main class="bd">
+  <section class="bd-hero">
+    <div>
+      <p class="bd-kicker">Design board · Workshop prototype v1</p>
+      <h1>Ask many restaurants at once.<br>The first Yes gets your table.</h1>
+      <p>A mobile prototype for Ulsan: your first choice is full and you can only walk. TrustMyChef lists trusted places nearby, asks the ones you pick by Instagram DM or AI call at the same time, and books the first one that says Yes. Sending requests comes with <b>TrustMyChef Pass, ₩3,000 a month</b>; the info and the map stay free. In the test we ask “Would you subscribe?” before trying and again after booking, and nothing is charged.</p>
+      <div class="bd-links">
+        <a class="btn btn-primary btn-sm" href="/">Open the prototype</a>
+        <a class="btn btn-line btn-sm" href="/rate">Rating survey</a>
+        <a class="btn btn-line btn-sm" href="/results/">Results (team)</a>
+      </div>
+    </div>
+    <div class="bd-meta">
+      <span><b>Team B</b> · Seonuk Kim, Junhyeok Song, Ariel Cedeno</span>
+      <span>Service Design Fundamentals DES20301 · UNIST</span>
+      <span>Nov 2026 · sdf.seonukkim.com</span>
+      <span>Data: HeXA Ulsan Info catalog (38 walkable restaurants), Gourmet notes, OpenStreetMap walking routes</span>
+    </div>
+  </section>
+
+  <!-- 01 -->
+  <section class="bd-sec" id="direction">
+    <header><span class="n">01</span><h2>From a food map to instant booking</h2>
+      <p>After the midterm: a map of expert picks brings people in, but searching is hard to charge for. People pay when we <b>do</b> something for them, such as getting a table right now.</p></header>
+    <div class="grid3">
+      <div class="card"><span class="tag-lo">AS-IS · low willingness to pay</span><h3>Search</h3><p>A map of places experts recommended in videos. Great for trust and for bringing users in, but there is no clear moment to pay.</p></div>
+      <div class="card"><span class="tag-hi">TO-BE · high willingness to pay</span><h3>Transaction</h3><p>Booking and getting a seat now. Like CatchTable, the money is in booking management, not in finding the place.</p></div>
+      <div class="card"><span class="tag-hi">Kakao Taxi style</span><h3>Ask many, first Yes wins</h3><p>One request goes to several restaurants at once. The first owner to tap Yes gets the booking. The others are cancelled for you.</p></div>
+    </div>
+    <div class="persona">
+      <span><svg class="ic sm"><use href="#i-heart"/></svg>Forgot the anniversary</span>
+      <span><svg class="ic sm"><use href="#i-clock"/></svg>Partner arrives in 20 min</span>
+      <span><svg class="ic sm"><use href="#i-ban"/></svg>First choice is full (50-min wait)</span>
+      <span><svg class="ic sm"><use href="#i-walk"/></svg>No car, walking only</span>
+      <span><svg class="ic sm"><use href="#i-utensils"/></svg>Needs a table now</span>
+    </div>
+  </section>
+
+  <!-- 02 -->
+  <section class="bd-sec" id="research">
+    <header><span class="n">02</span><h2>What we learned from Tabelog, Baemin and Coupang Eats</h2>
+      <p>We read their live mobile CSS and official pages, and looked at the parts closest to our flow: lists, booking requests, owner acceptance and live order tracking.</p></header>
+    <div class="grid3">
+      <div class="card">
+        <div class="brand-row"><i class="brand-dot" style="background:#FFAA00"></i><div><b>Tabelog</b><small>食べログ · Kakaku.com</small></div></div>
+        <div class="sw-row"><i style="background:#FFAA00"><span>#FFAA00</span></i><i style="background:#FF6A00"><span>#FF6A00</span></i><i style="background:#E64C30"><span>#E64C30</span></i><i style="background:#FAF8F5"><span>#FAF8F5</span></i><i style="background:#EEECE4"><span>#EEECE4</span></i></div>
+        <ul style="margin-top:26px">
+          <li>Score grammar: bold number, stars, review count. Star color deepens by tier (3.5+, 4.5+).</li>
+          <li>Line 2 is <b>station + walking distance</b>; the info table says “12-minute walk”.</li>
+          <li>Warm paper neutrals; 44px header; 6px card radius; medal badges (百名店, Award).</li>
+          <li><b>AI request booking</b>: a voice AI calls one restaurant; the answer comes by the next business day.</li>
+          <li>White on #FFAA00 is only 1.9:1, so the brand orange cannot carry text.</li>
+        </ul>
+        <p class="src">Sources: s.tabelog.com CSS · tabelog.com/en · tabelog.com/ai_request_booking/guide</p>
+      </div>
+      <div class="card">
+        <div class="brand-row"><i class="brand-dot" style="background:#0CEFD3"></i><div><b>Baemin</b><small>배달의민족 · Woowa Brothers</small></div></div>
+        <div class="sw-row"><i style="background:#0CEFD3"><span>#0CEFD3</span></i><i style="background:#1A7CFF"><span>#1A7CFF</span></i><i style="background:#5F57FF"><span>#5F57FF</span></i><i style="background:#00B96B"><span>#00B96B</span></i><i style="background:#FF403E"><span>#FF403E</span></i></div>
+        <ul style="margin-top:26px">
+          <li>Token layers ref → sem → com; mint buttons use <b>black text</b> (14.3:1).</li>
+          <li>Radius 8/12 buttons, 12 chips and inputs, 20 sheets; selected chips turn ink-black.</li>
+          <li>Friendly 해요체 without gags in Brand 2.0 (2025).</li>
+          <li>Owner app: an order not accepted in <b>3 minutes</b> is cancelled; accept = one tap + ETA.</li>
+          <li>민트스타: a badge plus a short “why it is special” note for local favorites.</li>
+        </ul>
+        <p class="src">Sources: baemin.com CSS · techblog.woowahan.com · 배민사장님 App Store</p>
+      </div>
+      <div class="card">
+        <div class="brand-row"><i class="brand-dot" style="background:#00B0FB"></i><div><b>Coupang Eats</b><small>쿠팡이츠 · Coupang</small></div></div>
+        <div class="sw-row"><i style="background:#00B0FB"><span>#00B0FB</span></i><i style="background:#F7552F"><span>#F7552F</span></i><i style="background:#FFB700"><span>#FFB700</span></i><i style="background:#88CC2F"><span>#88CC2F</span></i><i style="background:#31B4DD"><span>#31B4DD</span></i></div>
+        <ul style="margin-top:26px">
+          <li>4-step tracker: accepted → preparing → delivering → delivered.</li>
+          <li>You can cancel <b>only until the store accepts</b>.</li>
+          <li>Live map and remaining time; the wait is filled with other content.</li>
+          <li>Large food photos; one-touch checkout; WOW members pay no delivery fee.</li>
+          <li>Design system (RDS) components are A/B and usability tested.</li>
+        </ul>
+        <p class="src">Sources: coupangeats.com · App Store · Byline Network · Yozm IT</p>
+      </div>
+    </div>
+    <ol class="took">
+      <li><span><b>One warm accent at two strengths.</b> Bright #F2551D for pins and highlights; deep #CC4410 for button fills (white text 4.77:1).</span></li>
+      <li><span><b>Walking time is line 2</b> of every row and the default sort, like Tabelog’s station distance.</span></li>
+      <li><span><b>Who said it, on every row.</b> A named recommender plus their one-line reason; “No one recommended” is marked.</span></li>
+      <li><span><b>Checkbox rows + one sticky CTA:</b> “Send 3 requests”, with the channel (DM or AI call) per row. At Send we ask “Would you subscribe? ₩3,000/month” (free in the test), and again after booking.</span></li>
+      <li><span><b>Coupang-style step bar:</b> 1 Choose · 2 Wait · 3 Booked, and one live row per restaurant.</span></li>
+      <li><span><b>First Yes wins, then close the loop:</b> cancel the others automatically and tell those owners.</span></li>
+      <li><span><b>Stop until matched</b>, like cancelling before the store accepts.</span></li>
+      <li><span><b>Baemin chips and sheets:</b> ink-filled selected chips, 20px-radius sheets, warm 해요체 and plain English.</span></li>
+    </ol>
+    <div style="margin-top:22px">
+      <table class="bt">
+        <thead><tr><th>Closest analogue</th><th>Who asks</th><th>How many places</th><th>Time to answer</th><th>If no one says yes</th></tr></thead>
+        <tbody>
+          <tr><td>Tabelog AI request booking</td><td>Voice AI, human fallback</td><td>One</td><td>By the next business day</td><td>Reason + “call the restaurant”</td></tr>
+          <tr><td>Baemin owner app</td><td>The customer’s order</td><td>One</td><td>Auto-cancel after 3 min</td><td>Rejection reason sent</td></tr>
+          <tr><td>Coupang Eats tracking</td><td>The customer’s order</td><td>One</td><td>Live steps + ETA</td><td>Cancel until accepted</td></tr>
+          <tr><td class="us">TrustMyChef (prototype)</td><td class="us">DM or AI call, chosen per place</td><td class="us">Up to 5 at the same time</td><td class="us">Seconds (simulated)</td><td class="us">“What if” round in the workshop</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 03 -->
+  <section class="bd-sec" id="principles">
+    <header><span class="n">03</span><h2>Design principles</h2><p>Five rules we checked every screen against.</p></header>
+    <div class="prin">
+      <div class="card"><div class="ic-big"><svg class="ic"><use href="#i-walk"/></svg></div><h3>Walk first</h3><p>Minutes on foot come before anything else. Real routes, not straight lines.</p></div>
+      <div class="card"><div class="ic-big"><svg class="ic"><use href="#i-chef"/></svg></div><h3>Who said it</h3><p>Every place shows who recommended it and why. Trust lies with people (midterm insight).</p></div>
+      <div class="card"><div class="ic-big"><svg class="ic"><use href="#i-check"/></svg></div><h3>One tap, many asks</h3><p>Pick places, choose how to ask, send once. No calling one by one.</p></div>
+      <div class="card"><div class="ic-big"><svg class="ic"><use href="#i-eye"/></svg></div><h3>Show the machine</h3><p>Every simulated reply is labeled, and a system log shows what happens and why.</p></div>
+      <div class="card"><div class="ic-big"><svg class="ic"><use href="#i-text"/></svg></div><h3>Easy words</h3><p>Short sentences and common words, so international students can follow without help.</p></div>
+    </div>
+  </section>
+
+  <!-- 04 -->
+  <section class="bd-sec" id="tokens">
+    <header><span class="n">04</span><h2>Tokens</h2><p>Warm paper neutrals (Tabelog feel), one accent, status colors that never work alone: every status also has a word.</p></header>
+    <div class="swatches">
+      <div class="swatch"><i style="background:#F2551D"></i><div><b>brand</b>#F2551D · pins, selection · 3.45:1</div></div>
+      <div class="swatch"><i style="background:#CC4410"></i><div><b>brand-strong</b>#CC4410 · CTA fill · white 4.77:1</div></div>
+      <div class="swatch"><i style="background:#FFF1EA"></i><div><b>brand-tint</b>#FFF1EA · selected rows</div></div>
+      <div class="swatch"><i style="background:#1C1A19"></i><div><b>ink</b>#1C1A19 · 17.3:1</div></div>
+      <div class="swatch"><i style="background:#5B5550"></i><div><b>ink-2</b>#5B5550 · 7.3:1</div></div>
+      <div class="swatch"><i style="background:#6F6862"></i><div><b>ink-3</b>#6F6862 · 5.5:1</div></div>
+      <div class="swatch"><i style="background:#FAF8F5"></i><div><b>bg-3</b>#FAF8F5 · paper</div></div>
+      <div class="swatch"><i style="background:#ECE8E2"></i><div><b>line</b>#ECE8E2 · dividers</div></div>
+      <div class="swatch"><i style="background:#0E9F6E"></i><div><b>ok</b>#0E9F6E / text #067A55 · Yes, booked</div></div>
+      <div class="swatch"><i style="background:#C92A2D"></i><div><b>bad</b>#C92A2D · full, error · 5.45:1</div></div>
+      <div class="swatch"><i style="background:#8A5300"></i><div><b>warn</b>#8A5300 on #FFF4DB · 5.8:1</div></div>
+      <div class="swatch"><i style="background:#4F46C8"></i><div><b>sim</b>#4F46C8 · simulated content · 6.0:1</div></div>
+    </div>
+    <div class="grid2" style="margin-top:20px">
+      <div class="card">
+        <h3>Type · Pretendard (OFL)</h3>
+        <div class="type-row"><small>Display 27/1.28 · 800</small><span class="h-display" style="font-size:27px">You are booked!</span></div>
+        <div class="type-row"><small>Title 21/1.35 · 750</small><span class="h-title">Asking 3 places at once</span></div>
+        <div class="type-row"><small>Section 17/1.4 · 700</small><span class="h-sec">23 places you can walk to</span></div>
+        <div class="type-row"><small>Name 16.5 · 750</small><span class="row-name">Eoha Bokguk</span></div>
+        <div class="type-row"><small>Body 15/1.55 · 500</small><span class="t-body">The first place to say Yes gets your booking.</span></div>
+        <div class="type-row"><small>Meta 13/1.45</small><span class="t-meta">Korean · Pufferfish · Guyeong-ri</span></div>
+        <div class="type-row" style="border:0"><small>Badge 11.5 · 700</small><span><span class="badge o">Gourmet</span> <span class="badge g">Visited</span> <span class="badge sim">Simulated reply</span></span></div>
+      </div>
+      <div class="card">
+        <h3>Spacing · 4px grid</h3>
+        <div class="space-row">
+          <div><i style="width:4px;height:4px"></i>4</div><div><i style="width:8px;height:8px"></i>8</div><div><i style="width:12px;height:12px"></i>12</div>
+          <div><i style="width:16px;height:16px"></i>16 · margin</div><div><i style="width:20px;height:20px"></i>20</div><div><i style="width:24px;height:24px"></i>24</div><div><i style="width:32px;height:32px"></i>32</div>
+        </div>
+        <h3 style="margin-top:22px">Radius</h3>
+        <div class="radius-row"><div style="border-radius:6px">6 badge</div><div style="border-radius:8px">8 photo</div><div style="border-radius:12px">12 button</div><div style="border-radius:16px">16 card</div><div style="border-radius:20px">20 sheet</div><div style="border-radius:999px">pill chip</div></div>
+        <h3 style="margin-top:22px">Elevation</h3>
+        <p>One soft card shadow, one sheet shadow, and a dock shadow for the sticky bottom bar. Tap targets are at least 44px; main CTAs are 56px.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 05 -->
+  <section class="bd-sec" id="grid">
+    <header><span class="n">05</span><h2>Grid &amp; layout</h2><p>390px phone, 4 columns, 16px side margins, 8px gutters. Wide screens switch to the presenter split view: the phone on the left, the live process view and a QR code on the right.</p></header>
+    <div class="grid3">
+      <div>
+        <div class="phone-mock">
+          <div class="cols"><i></i><i></i><i></i><i></i></div>
+          <div class="blk" style="top:14px;height:34px">App bar 52</div>
+          <div class="blk" style="top:56px;height:22px">Steps</div>
+          <div class="blk" style="top:84px;height:120px">Map 188</div>
+          <div class="blk" style="top:212px;height:36px">Full banner</div>
+          <div class="blk" style="top:256px;height:52px">People · When</div>
+          <div class="blk" style="top:316px;height:26px">Filter chips</div>
+          <div class="blk" style="top:350px;height:70px">Row · 88 photo</div>
+          <div class="blk" style="top:426px;height:70px">Row</div>
+          <div class="blk" style="top:530px;height:64px;background:rgba(204,68,16,.18)">Dock · 56 CTA</div>
+        </div>
+      </div>
+      <div class="anat" style="grid-column:span 2">
+        <h3 style="margin:0 0 16px">List row anatomy</h3>
+        <ul class="list" style="max-width:420px">
+          <li class="row sel" style="pointer-events:none">
+            <span class="thumb"><img src="/img/p/eoha-bokguk-480.webp" alt=""><span class="ord">5</span></span>
+            <div class="row-main">
+              <div class="row-name">Eoha Bokguk</div>
+              <div class="row-meta">Korean · Pufferfish · Guyeong-ri</div>
+              <div class="walk"><svg class="ic sm"><use href="#i-walk"/></svg>4 min walk<span class="dist">· 284 m</span><span class="price">₩₩₩</span></div>
+              <div class="who"><span class="badge o"><svg class="ic xs"><use href="#i-chef"/></svg>Gourmet</span><span class="badge g">Visited</span></div>
+              <p class="quote">A restaurant specializing in Korean pufferfish dishes, including bokgyetang.</p>
+            </div>
+            <span class="pick"><svg class="ic"><use href="#i-check"/></svg></span>
+            <div class="chan"><span class="lbl">Ask by</span><button aria-pressed="true"><svg class="ic sm"><use href="#i-chat"/></svg>DM</button><button aria-pressed="false"><svg class="ic sm"><use href="#i-bot"/></svg>AI call</button></div>
+          </li>
+        </ul>
+        <ol style="margin:18px 0 0;padding-left:18px;color:var(--ink-2);font-size:14px;display:grid;gap:4px">
+          <li><b>Photo 88×88, r8</b> with the list number (matches the map pin).</li>
+          <li><b>Name</b> 16.5 bold → <b>cuisine · tags · area</b> 13 gray.</li>
+          <li><b>Walking minutes</b> in deep orange + meters + price guess.</li>
+          <li><b>Who recommended</b> badges + their one-line reason (2 lines max).</li>
+          <li><b>Pick circle</b> 32px; the whole row is the tap target (≥ 88px tall).</li>
+          <li>When picked: <b>Ask by</b> DM or AI call; both come with the ₩3,000/month Pass.</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- 06 -->
+  <section class="bd-sec" id="components">
+    <header><span class="n">06</span><h2>Components</h2><p>Live, from the same stylesheet as the prototype.</p></header>
+    <div class="grid2">
+      <div class="comp-block"><h4>Buttons</h4><div class="comp-row">
+        <button class="btn btn-primary">Send 3 requests</button><button class="btn btn-line">Stop asking</button><button class="btn btn-dark">Next person</button><button class="btn btn-primary" disabled>Pick at least 1 place</button></div></div>
+      <div class="comp-block"><h4>Chips · segmented · badges</h4><div class="comp-row">
+        <button class="chip" aria-pressed="true">All</button><button class="chip">Korean</button><button class="chip">Japanese</button>
+        <span class="seg-ctl"><button aria-pressed="true">Guyeong-ri</button><button>Samsan-dong</button></span></div>
+        <div class="comp-row" style="margin-top:12px"><span class="badge o">Gourmet</span><span class="badge g">Visited</span><span class="badge ok">UNIST deal</span><span class="badge line">No one recommended</span><span class="badge sim">Simulated reply</span></div></div>
+      <div class="comp-block"><h4>Request status</h4><div class="comp-row">
+        <span class="st wait">Sent</span><span class="st wait">Seen</span><span class="st live">Typing <span class="typing"><i></i><i></i><i></i></span></span><span class="st live">Ringing <span class="wave"><i></i><i></i><i></i><i></i></span></span>
+        <span class="st yes">Yes! <svg class="ic xs"><use href="#i-check"/></svg></span><span class="st no">Full</span><span class="st off">No answer</span><span class="st off">Cancelled</span></div>
+        <div class="steps" style="padding:16px 0 0"><div class="seg done"><i></i><span>1. Choose</span></div><div class="seg now"><i></i><span>2. Wait</span></div><div class="seg"><i></i><span>3. Booked</span></div></div></div>
+      <div class="comp-block"><h4>Conversation (DM, AI call, simulated owner)</h4>
+        <div class="thread">
+          <div class="msg tmc"><div class="who-l"><svg class="ic xs"><use href="#i-chef"/></svg>TrustMyChef</div>Hi! This is TrustMyChef. Can you seat 2 people now? The guest is 4 min away on foot. Please tap Yes or No.<div class="qr"><span class="picked">Yes, come now</span><span>Sorry, full</span></div></div>
+          <div class="msg owner"><div class="who-l"><svg class="ic xs"><use href="#i-utensils"/></svg>Owner <span class="badge sim">Simulated reply</span></div>Yes! We have a table for 2. See you soon.</div>
+          <div class="msg sys">Sent a cancel message to the other 2 places</div>
+        </div></div>
+      <div class="comp-block"><h4>1–10 rating + quadrant feedback</h4>
+        <div class="scale-q"><span>Would you pay for it?</span><output>7</output></div>
+        <div class="scale"><button>1</button><button>2</button><button>3</button><button>4</button><button>5</button><button>6</button><button aria-pressed="true">7</button><button>8</button><button>9</button><button>10</button></div>
+        <div class="scale-ends"><span>1 = Only if free</span><span>10 = Yes, I would pay</span></div>
+        <div class="quad-line"><span class="quad-mini"><i style="left:75%;bottom:65%"></i></span><span>Goes to: <span class="quad-name q-mp">Worth paying for</span></span></div></div>
+      <div class="comp-block"><h4>Presenter hub (wide screens)</h4>
+        <p class="t-sub" style="margin:0">You → TrustMyChef → each restaurant, with “what the owner sees” next to it. Orange moving lines = waiting, green = first Yes, gray dashed = cancelled. It listens to the prototype’s events and never drives it.</p></div>
+    </div>
+  </section>
+
+  <!-- 07 -->
+  <section class="bd-sec" id="screens">
+    <header><span class="n">07</span><h2>Screens</h2><p>Live previews of the prototype (scroll sideways). <button class="link-btn" id="lang-toggle" type="button">Show in Korean</button></p></header>
+    <div class="screens" id="shots">
+      <figure><div class="frame"><iframe data-shot="intro" title="Intro" loading="lazy"></iframe></div><figcaption><b>0 · Situation</b>Anniversary, first choice full, walking only.</figcaption></figure>
+      <figure><div class="frame"><iframe data-shot="choose" title="Choose" loading="lazy"></iframe></div><figcaption><b>1 · Choose and send</b>Walkable places, who recommended them, DM or AI call.</figcaption></figure>
+      <figure><div class="frame"><iframe data-shot="pass" title="Pass" loading="lazy"></iframe></div><figcaption><b>Would you subscribe?</b>₩3,000/month, asked before trying and after booking. Free in the test.</figcaption></figure>
+      <figure><div class="frame"><iframe data-shot="wait" title="Wait" loading="lazy"></iframe></div><figcaption><b>2 · Wait for an answer</b>Live rows, the DM thread and owner’s one-tap reply.</figcaption></figure>
+      <figure><div class="frame"><iframe data-shot="call" title="AI call" loading="lazy"></iframe></div><figcaption><b>2 · AI call</b>The AI asks; the owner presses 1 or 2.</figcaption></figure>
+      <figure><div class="frame"><iframe data-shot="booked" title="Booked" loading="lazy"></iframe></div><figcaption><b>3 · Booking confirmed</b>Table held 10 min, walking route, others cancelled.</figcaption></figure>
+      <figure><div class="frame"><iframe data-shot="bad" title="What if 1" loading="lazy"></iframe></div><figcaption><b>What if 1 · a bad place says Yes</b>No one recommended it, but it answered first.</figcaption></figure>
+      <figure><div class="frame"><iframe data-shot="none" title="What if 2" loading="lazy"></iframe></div><figcaption><b>What if 2 · no one says Yes</b>Full or no answer everywhere.</figcaption></figure>
+    </div>
+  </section>
+
+  <!-- 08 -->
+  <section class="bd-sec" id="woz">
+    <header><span class="n">08</span><h2>Wizard of Oz, one step further</h2><p>Instead of a person typing replies behind a curtain, a small engine plays the owners with realistic timing. Everything that is simulated is labeled in the UI, and nothing leaves the browser.</p></header>
+    <div class="grid2">
+      <table class="bt">
+        <thead><tr><th>Real</th><th>Simulated</th></tr></thead>
+        <tbody>
+          <tr><td>38 restaurants from the HeXA Ulsan Info catalog (names, photos, addresses, categories)</td><td>Your first choice being full (50/60-min wait)</td></tr>
+          <tr><td>Who recommended it: Gourmet notes, JGW Food Archive, Korea Essentials, Ulsan Online</td><td>Owner replies and their timing</td></tr>
+          <tr><td>Walking minutes and routes (OpenStreetMap foot routing)</td><td>Instagram DMs and AI phone calls</td></tr>
+          <tr><td>Map links (Naver, Kakao, Google)</td><td>The subscription (₩3,000/month: asked, never charged) and the 10-minute table hold</td></tr>
+        </tbody>
+      </table>
+      <div class="card">
+        <h3>Reply engine (normal speed)</h3>
+        <div class="lane"><span>DM</span><div class="bar-t"><i class="seg-t" style="left:4%;width:5%;background:#A39B93">sent</i><i class="seg-t" style="left:16%;width:15%;background:#6F6862">seen</i><i class="seg-t" style="left:38%;width:12%;background:#F2551D">typing</i><i class="seg-t" style="left:50%;width:14%;background:#0E9F6E">reply 5.5–9 s</i></div></div>
+        <div class="lane"><span>AI call</span><div class="bar-t"><i class="seg-t" style="left:0;width:6%;background:#A39B93">dial</i><i class="seg-t" style="left:6%;width:18%;background:#6F6862">ringing</i><i class="seg-t" style="left:24%;width:22%;background:#F2551D">AI asks</i><i class="seg-t" style="left:46%;width:22%;background:#0E9F6E">press 1/2 · 6–9.5 s</i></div></div>
+        <div class="lane"><span>No answer</span><div class="bar-t"><i class="seg-t" style="left:0;width:92%;background:#D8D2CA;color:var(--ink-2)">timeout at 12–14 s</i></div></div>
+        <div class="scale-t"><span>0 s</span><span>7 s</span><span>14 s</span></div>
+        <ul>
+          <li>The <b>first Yes wins</b>; open requests get a cancel message 0.6 s later.</li>
+          <li>A “No” often arrives before the Yes, so the race feels real.</li>
+          <li>Facilitator modes: <b>Normal</b> · <b>What if 1</b> (a place no one recommended answers first) · <b>What if 2</b> (no one says yes) · speed normal/fast.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 09 -->
+  <section class="bd-sec" id="validation">
+    <header><span class="n">09</span><h2>Validation in the workshop</h2><p>Goal: find out which features people would pay for, and where the sales point is. <b>Quantitative first:</b> everyone tries the prototype and rates it on the phone (3–5 min). <b>Qualitative next:</b> post-it ideas on paper, grouped later in an affinity diagram.</p></header>
+    <div class="timeline five">
+      <div><b>1</b>Intro on the big screen: the idea + 3 main features</div>
+      <div class="hl"><b>2 · Quantitative</b>Try it and rate it on the phone (3–5 min)</div>
+      <div><b>3 · Qualitative</b>Post-its: ideas for each feature</div>
+      <div><b>4</b>Two “what if” questions: a bad place says yes? No one says yes?</div>
+      <div><b>5</b>A3 2×2 with post-its + discussion → affinity diagram</div>
+    </div>
+    <div class="grid3" style="margin-top:18px">
+      <div class="card"><h3>One 2×2 on the phone · convenient × pay</h3>
+        <div class="quad-big"><div class="qa-np"><b>Would pay, but not convenient</b><span>fix the flow</span></div><div class="qa-mp"><b>Worth paying for</b><span>→ Pass features</span></div><div class="qa-nn"><b>Not useful</b><span>drop</span></div><div class="qa-mf"><b>Good, but should be free</b><span>→ free hook</span></div></div>
+        <div class="axis"><span>1</span><span>How convenient is it? →</span><span>10</span></div>
+        <p style="margin-top:10px">Items: screen 1, screen 2, screen 3 and the whole service with the Pass. Y axis: “Would you pay for it?” (1–10). 6 or more counts as high.</p></div>
+      <div class="card"><h3>Two kinds of data</h3>
+        <ul>
+          <li><b>Qualitative:</b> post-it ideas (own ideas and the two “what if” questions) stay on paper. Groups place them on the paper 2×2; the team clusters them in an affinity diagram.</li>
+          <li><b>Quantitative:</b> 1–10 ratings for the 4 items, plus “Would you subscribe? ₩3,000/month” (yes / maybe / no) before trying and after booking: the change shows the sales point.</li>
+          <li>Both are linked by the group (1, 2, 3, 4, Teaching).</li>
+        </ul></div>
+      <div class="card"><h3>What we collect</h3>
+        <ul>
+          <li>Only fields from our interview forms: gender, age (in full years), affiliation, meals out per month, apps used. All required; each has a “prefer not to say” or “other” option.</li>
+          <li>No name, phone, e-mail or account.</li>
+          <li>What they did in the prototype: places picked, DM vs AI call, subscribe answers, time to choose, result.</li>
+          <li>Results page (team key): one quadrant chart, means ± SD, share per quadrant, subscribe yes-rate before → after, filters, CSV export.</li>
+        </ul></div>
+    </div>
+  </section>
+
+  <!-- 10 -->
+  <section class="bd-sec" id="copy">
+    <header><span class="n">10</span><h2>Copy guide: easy English</h2><p>Many participants are international students. One idea per sentence, everyday words, numbers as digits, no idioms. Korean uses warm 해요체.</p></header>
+    <div class="grid2">
+      <table class="bt copy-t">
+        <thead><tr><th>Avoid</th><th>Use</th></tr></thead>
+        <tbody>
+          <tr><td>Reservation requests have been dispatched to the selected establishments.</td><td>Asking 3 places at once</td></tr>
+          <tr><td>Awaiting merchant confirmation</td><td>Waiting for answers</td></tr>
+          <tr><td>Your reservation has been successfully confirmed.</td><td>You are booked!</td></tr>
+          <tr><td>Concurrent multi-venue booking with first-acceptance allocation</td><td>The first place to say Yes gets your booking.</td></tr>
+          <tr><td>Willingness-to-pay indicator</td><td>Would you pay for it? 1 = Only if free, 10 = Yes, I would pay</td></tr>
+        </tbody>
+      </table>
+      <div class="card">
+        <h3>Rules</h3>
+        <ul>
+          <li>12 words or fewer per sentence on screens.</li>
+          <li>Verbs people say: pick, ask, wait, book, walk, pay.</li>
+          <li>Every status has a word and a color, never color alone.</li>
+          <li>Say what is simulated: “Simulated reply”, “test, no charge”.</li>
+          <li>Korean: 해요체, no jokes; same meaning as English, not word-for-word.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <footer class="bd-foot">
+    <span><b>Credits.</b> Restaurant data and photos: HeXA Ulsan Info (info.seonukkim.com) and Gourmet by Seonuk Kim. Walking routes: OSRM foot profile on routing.openstreetmap.de, © OpenStreetMap contributors. Map tiles © OpenStreetMap contributors. Font: Pretendard (SIL OFL). Icons adapted from Lucide (ISC).</span>
+    <span><b>Research sources.</b> s.tabelog.com · tabelog.com/help/score · tabelog.com/ai_request_booking/guide · baemin.com · techblog.woowahan.com/17081 · apps.apple.com (Tabelog, 배민, 배민사장님, 쿠팡이츠) · byline.network · designcompass.org · yozm.wishket.com · gogumafarm.kr · coupangeats.com</span>
+    <span>This is a class prototype. No real restaurant is contacted and no payment is made.</span>
+  </footer>
+</main>
+<script src="/js/board.js" type="module"></script>
+</body>
+</html>

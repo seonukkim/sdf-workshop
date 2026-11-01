@@ -1,0 +1,24 @@
+{
+  // TrustMyChef workshop prototype → https://sdf.seonukkim.com
+  "name": "trustmychef-sdf",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-09-01",
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "html_handling": "auto-trailing-slash",
+    "run_worker_first": ["/api/*"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "trustmychef-sdf",
+      "database_id": "3bb08889-a407-4361-9614-35f5822cd79a",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "routes": [{ "pattern": "sdf.seonukkim.com", "custom_domain": true }],
+  "observability": { "enabled": true }
+  // RESULTS_KEY (the password for /results/) is a secret: npx wrangler secret put RESULTS_KEY
+}
