@@ -14,6 +14,10 @@ body.rs { background: var(--bg-3); height: auto; min-height: 100%; }
 /* until the key is entered: no live badge, refresh, CSV, lock or delete */
 body.rs-locked .rs-auth, body.rs-locked .rs-live { display: none; }
 #cmp-table td.num { white-space: nowrap; }
+.rs-card { scroll-margin-top: 76px; }
+.rs-card.flash { animation: rs-flash 1.6s ease-out; }
+@keyframes rs-flash { 0%, 40% { box-shadow: 0 0 0 3px var(--bad); } 100% { box-shadow: 0 0 0 3px transparent; } }
+.rs-del { gap: 4px; white-space: nowrap; }
 .rs-notice { margin: 0 0 12px; padding: 10px 14px; border-radius: 12px; background: var(--ok-tint); color: var(--ok); font-weight: 700; font-size: 13.5px; }
 /* compare by category */
 .rs-seg { display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 4px; border-radius: 12px; background: var(--bg-2); }

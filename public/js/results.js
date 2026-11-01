@@ -1,6 +1,6 @@
 // Facilitator dashboard (quantitative part): reads /api/responses with the results key and shows
 // ONE 2×2 matrix — How convenient is it? × Would you pay for it? (1–10) — for each screen and the whole
-// service, plus "Would you subscribe? ₩3,000/month", asked once right after booking (the sales point).
+// service, plus "Would you subscribe? ₩2,500/month", asked once right after booking (the sales point).
 // Post-it ideas are analysed on paper (affinity diagram).
 import { makeXlsx } from './xlsx.js';
 
@@ -14,12 +14,12 @@ const T = {
     group: 'Group', gender: 'Gender', aff: 'Affiliation', age: 'Age', all: 'All', count: '{n} of {total} responses',
     kResp: 'Responses', kTried: 'Tried the prototype', kSub: 'Would subscribe (Yes) · after booking', kPay: 'Avg. “would pay” · whole service',
     of: 'of {n}', item: 'Item', mx: 'Conv.', my: 'Pay', nn: 'n', spread: 'Answers by quadrant', byMean: 'Mean is in',
-    S1: 'Screen 1 · Ask many places at once', S2: 'Screen 2 · The first Yes wins', S3: 'Screen 3 · Booking confirmed', S4: 'The whole service (Pass ₩3,000/mo)',
+    S1: 'Screen 1 · Ask many places at once', S2: 'Screen 2 · The first Yes wins', S3: 'Screen 3 · Booking confirmed', S4: 'The whole service (Pass ₩2,500/mo)',
     mp: 'Worth paying for', np: 'Would pay, but not convenient', mf: 'Good, but should be free', nn2: 'Not useful',
     noData: 'No responses yet.',
     xConv: 'How convenient', yPay: 'Would pay',
-    list: 'Every answer (time recorded)', recorded: 'Recorded (KST)', del: 'Delete', delAsk: 'Delete this answer? (for test runs)', grp: 'Group', ages: 'Age', sub: 'Subscribe', rates: 'Ratings 1–4 (conv/pay)',
-    bSubPre: 'Would subscribe (₩3,000/mo)? · Before trying', bSubPost: 'Would subscribe (₩3,000/mo)? · After booking',
+    list: 'Every answer · delete one by one', toList: 'Delete one by one ↓', recorded: 'Recorded (KST)', del: 'Delete', delAsk: 'Delete this answer? (for test runs)', grp: 'Group', ages: 'Age', sub: 'Subscribe', rates: 'Ratings 1–4 (conv/pay)',
+    bSubPre: 'Would subscribe (₩2,500/mo)? · Before trying', bSubPost: 'Would subscribe (₩2,500/mo)? · After booking',
     bShift: 'Change after trying', up: 'More willing', same: 'Same', down: 'Less willing', yes: 'Yes', maybe: 'Maybe', no: 'No', teaching: 'Teaching',
     bResult: 'Result in the prototype', booked: 'Booked', none: 'No one said Yes', stopped: 'Stopped', notTried: 'Did not try',
     bSel: 'Places picked (avg.)', bTime: 'Time to choose (median)', bYes: 'Time to first Yes (median)', bOutcome: 'Facilitator setting',
@@ -50,12 +50,12 @@ const T = {
     group: '모둠', gender: '성별', aff: '소속', age: '나이', all: '전체', count: '응답 {total}개 중 {n}개',
     kResp: '응답 수', kTried: '프로토타입 사용', kSub: '구독 의향(네) · 예약한 뒤', kPay: '서비스 전체 지불 의향 평균',
     of: '{n}명 중', item: '항목', mx: '편리', my: '지불', nn: 'n', spread: '사분면별 응답', byMean: '평균 위치',
-    S1: '화면 1 · 여러 곳에 한 번에 요청', S2: '화면 2 · 먼저 수락한 곳으로', S3: '화면 3 · 예약 확정', S4: '서비스 전체 (패스 월 ₩3,000)',
+    S1: '화면 1 · 여러 곳에 한 번에 요청', S2: '화면 2 · 먼저 수락한 곳으로', S3: '화면 3 · 예약 확정', S4: '서비스 전체 (패스 월 ₩2,500)',
     mp: '돈 낼 만해요', np: '돈은 내겠지만 불편해요', mf: '좋지만 무료여야 해요', nn2: '필요 없어요',
     noData: '아직 응답이 없어요.',
     xConv: '편리함', yPay: '지불 의향',
-    list: '전체 응답 (기록 시각)', recorded: '기록 시각 (KST)', del: '삭제', delAsk: '이 응답을 삭제할까요? (테스트용)', grp: '모둠', ages: '나이', sub: '구독', rates: '평가 1–4 (편리/지불)',
-    bSubPre: '구독(월 ₩3,000) 의향 · 써 보기 전', bSubPost: '구독(월 ₩3,000) 의향 · 예약한 뒤',
+    list: '전체 응답 · 하나씩 삭제', toList: '하나씩 삭제 ↓', recorded: '기록 시각 (KST)', del: '삭제', delAsk: '이 응답을 삭제할까요? (테스트용)', grp: '모둠', ages: '나이', sub: '구독', rates: '평가 1–4 (편리/지불)',
+    bSubPre: '구독(월 ₩2,500) 의향 · 써 보기 전', bSubPost: '구독(월 ₩2,500) 의향 · 예약한 뒤',
     bShift: '써 본 뒤 변화', up: '더 긍정적', same: '같음', down: '더 부정적', yes: '네', maybe: '잘 모르겠어요', no: '아니요', teaching: 'Teaching',
     bResult: '프로토타입 결과', booked: '예약 완료', none: '수락 없음', stopped: '중간 취소', notTried: '사용 안 함',
     bSel: '고른 식당 수 (평균)', bTime: '고르는 시간 (중앙값)', bYes: '첫 수락까지 (중앙값)', bOutcome: '진행자 설정',
@@ -411,7 +411,7 @@ function listSection(rows) {
     <td>${esc(r.profile?.gender ? t(r.profile.gender) : '–')}</td><td class="num">${r.profile?.age ?? '–'}</td>
     <td>${subTxt(r.flow?.subPost)}</td>
     <td class="num">${ITEMS.map((k) => `${r.ratings?.[k]?.x ?? '–'}/${r.ratings?.[k]?.y ?? '–'}`).join(' · ')}</td>
-    <td><button class="btn btn-line btn-sm danger" data-del="${esc(r.id)}">${t('del')}</button></td></tr>`).join('');
+    <td><button class="btn btn-line btn-sm danger rs-del" data-del="${esc(r.id)}"><svg class="ic sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6"/></svg>${t('del')}</button></td></tr>`).join('');
   $('#list').innerHTML = rows.length
     ? `<table class="rs-t"><thead><tr><th>${t('recorded')}</th><th>${t('grp')}</th><th>${t('gender')}</th><th class="num">${t('ages')}</th><th>${t('sub')}</th><th class="num">${t('rates')}</th><th></th></tr></thead><tbody>${body}</tbody></table>`
     : `<div class="empty-state">${t('noData')}</div>`;
@@ -516,6 +516,13 @@ $('#filters').addEventListener('change', (e) => {
 $('#dotsA').addEventListener('change', draw);
 $('#refresh').addEventListener('click', () => load());
 document.addEventListener('visibilitychange', () => { if (!document.hidden && KEY && !$('#dash').hidden) load({ quiet: true }); });
+$('#toList').addEventListener('click', () => {
+  const card = $('#list-card');
+  card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  card.classList.remove('flash');
+  void card.offsetWidth;
+  card.classList.add('flash');
+});
 $('#csv1').addEventListener('click', csvAnswers);
 $('#xlsx1').addEventListener('click', xlsxAll);
 $('#cmp-dims').addEventListener('click', (e) => {

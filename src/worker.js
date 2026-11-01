@@ -90,7 +90,7 @@ function clean(b) {
     winner: typeof f.winner === 'string' && /^[a-z0-9-]{1,64}$/.test(f.winner) ? f.winner : null,
     winnerListingOnly: bool(f.winnerListingOnly),
     timeToYesSec: Number.isFinite(f.timeToYesSec) ? Math.min(600, Math.max(0, Math.round(f.timeToYesSec * 10) / 10)) : null,
-    subPre: oneOf(f.subPre, SUB),   // "Would you subscribe? ₩3,000/month" before trying
+    subPre: oneOf(f.subPre, SUB),   // "Would you subscribe?" (old rows only; now asked once after booking)
     subPost: oneOf(f.subPost, SUB), // ... and after booking
   };
 

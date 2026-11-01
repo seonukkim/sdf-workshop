@@ -20,6 +20,7 @@
     <button class="btn btn-line btn-sm rs-auth" id="csv1" data-t="csvResp">CSV · answers</button>
     <button class="btn btn-line btn-sm rs-auth" id="xlsx1" data-t="xlsx">XLSX · all</button>
     <button class="btn btn-line btn-sm rs-auth" id="lock"><svg class="ic sm" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span data-t="lock">Lock</span></button>
+    <button class="btn btn-line btn-sm rs-auth danger" id="toList"><svg class="ic sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6"/></svg><span data-t="toList">Delete one by one ↓</span></button>
     <button class="btn btn-sm rs-auth rs-wipe" id="wipe"><svg class="ic sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg><span data-t="wipe">Delete all answers</span></button>
   </div>
 </header>
@@ -49,8 +50,8 @@
         <div class="rs-chart-wrap"><div id="chartA" class="rs-chart"></div><div id="tableA" class="rs-table-wrap"></div></div>
       </article>
       <article class="rs-card"><h2 data-t="behavior">What people did in the prototype</h2><div id="behavior"></div></article>
-      <article class="rs-card span2"><h2 data-t="list">Every answer (time recorded)</h2><div id="list" class="rs-table-wrap"></div></article>
       <article class="rs-card"><h2 data-t="profile">Who answered</h2><div id="profile"></div></article>
+      <article class="rs-card span2" id="list-card"><h2 data-t="list">Every answer · delete one by one</h2><div id="list" class="rs-table-wrap"></div></article>
     </div>
   </section>
 </main>
