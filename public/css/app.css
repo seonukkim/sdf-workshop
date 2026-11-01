@@ -898,6 +898,11 @@ textarea.input { height: auto; min-height: 64px; padding: 12px 14px; resize: ver
 .qual-list li.now .n { background: var(--brand); color: #fff; }
 .qual-list li.done { opacity: .6; }
 .next-paper { display: flex; gap: 8px; align-items: center; margin: 14px 0 0; padding: 12px 14px; border-radius: 12px; background: var(--brand-tint); color: var(--brand-strong); font-weight: 700; font-size: 14px; }
+/* phone: end of the survey, everyone looks up at the big screen */
+.look-screen { display: grid; justify-items: center; gap: 4px; margin-top: 6px; padding: 22px 18px; border-radius: var(--r-lg); background: var(--ink); color: #fff; text-align: center; }
+.look-screen .ic { width: 44px; height: 44px; color: #FFB27A; margin-bottom: 4px; }
+.look-screen b { font-size: 22px; font-weight: 800; letter-spacing: -.02em; line-height: 1.25; }
+.look-screen span { font-size: 14px; color: rgba(255, 255, 255, .75); }
 
 /* v3 tuning: secondary blocks compact, the parts people must read (2×2, QR, timer) big */
 @media (min-width: 1100px) {

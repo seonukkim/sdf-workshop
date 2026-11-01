@@ -348,25 +348,21 @@ export function thanks(state = lastState) {
     <div class="body">
       <div class="done-hero"><div class="check-pop">${icon('check')}</div><h1 class="h-title">${t('thanksTitle')}</h1><p class="t-sub" style="margin:4px 0 0">${sub}</p></div>
       <div class="sv">
+        <div class="look-screen" role="status">
+          <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+          <b>${t('lookTitle')}</b><span>${t('lookBody')}</span>
+        </div>
         <div class="sv-card"><h3>${t('thanksYour')}</h3>
           <div class="big-quad">${quadSvg(pts, { xLabel: t('qConv'), yLabel: t('qPay') })}</div>
           <ol class="t-meta" style="margin:8px 0 0;padding-left:18px">${ITEMS.map((it) => `<li>${t(it.title)}</li>`).join('')}</ol>
         </div>
-        <p class="next-paper">${icon('utensils', 'sm')}<span>${t('thanksNext')}</span></p>
         <p class="fine" style="margin:14px 0 0">${icon('info')}<span>${t('debrief')}</span></p>
       </div>
     </div>
-    <div class="dock"><button class="btn btn-dark btn-lg btn-block" data-act="nextp">${icon('refresh')}${t('nextPerson')}</button></div>
   </section>`, (root) => {
     root.addEventListener('click', (e) => {
       const b = e.target.closest('[data-act]');
-      if (!b) return;
-      if (b.dataset.act === 'lang') { setLang(S.lang === 'ko' ? 'en' : 'ko'); thanks(state); }
-      if (b.dataset.act === 'nextp') {
-        D = blank(); save(); lastAnswers = null;
-        resetPerson();
-        go('/');
-      }
+      if (b?.dataset.act === 'lang') { setLang(S.lang === 'ko' ? 'en' : 'ko'); thanks(state); }
     });
   });
   // a submitted draft is finished; the next visitor starts clean

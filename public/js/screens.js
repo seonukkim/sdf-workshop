@@ -168,7 +168,7 @@ function dockHtml() {
   S.selected.forEach((v) => (v === 'call' ? call++ : dm++));
   const label = n === 0 ? t('sendNone') : n === 1 ? t('send1') : t('send', { n });
   return `
-    <div class="sum"><span>${t('selected', { n })}${n ? ` · ${t('selectedMix', { dm, call })}` : ''}</span>${n ? `<span class="t-cap pass-note ${S.flow.subPre ? 'on' : ''}">${S.flow.subPre ? `${icon('check', 'xs')}${t('subFreeShort')}` : `${icon('lock', 'xs')}${t('feeNote')}`}</span>` : ''}</div>
+    <div class="sum"><span>${t('selected', { n })}${n ? ` · ${t('selectedMix', { dm, call })}` : ''}</span>${n ? `<span class="t-cap pass-note">${icon('star', 'xs')}${t('feeNote')}</span>` : ''}</div>
     <button class="btn btn-primary btn-lg btn-block" data-act="send" ${n ? '' : 'disabled'}>${label}${n ? icon('right') : ''}</button>`;
 }
 function filterChips() {
@@ -263,7 +263,7 @@ export function choose() {
       else if (act === 'party') { S.party = Math.min(8, Math.max(1, S.party + Number(a.dataset.d))); $('#party', root).textContent = S.party; $$('[data-act="party"]', root).forEach((b) => { b.disabled = (b.dataset.d === '-1' && S.party <= 1) || (b.dataset.d === '1' && S.party >= 8); }); emit('select'); }
       else if (act === 'top3') { visibleCands().filter((c) => !S.selected.has(c.id)).slice(0, 3).forEach((c) => S.selected.size < MAX_PICK && S.selected.set(c.id, 'dm')); refresh(); }
       else if (act === 'clear') { S.selected.clear(); refresh(); }
-      else if (act === 'send') { if (S.flow.subPre) startMatch(); else openSubscribe('pre', startMatch); }
+      else if (act === 'send') startMatch();
     });
     $('#when', root).addEventListener('change', (e) => { S.when = e.target.value; emit('select'); });
     map = mountMap($('#map-choose', root), {
@@ -306,10 +306,11 @@ export function startMatch() {
 }
 
 // ------------------------------------------------------------------ subscribe question (₩3,000/month)
-// Asked twice to find the sales point: 'pre' when they tap Send (before trying), 'post' right after the
-// booking is confirmed. It is an experiment: the answer is recorded, nothing is charged, and the flow always
-// continues. The popup cannot be dismissed without an answer.
+// Asked once, right after every booking ('post'): by then people have tried the idea, so the answer means
+// something. It is an experiment: the answer is recorded (the last one counts), nothing is charged, and the
+// flow always continues. The popup cannot be dismissed without an answer.
 let subNext = null;
+let jumped = false; // the presenter jumped straight to Booked: no popup for that visit
 export function skipSubscribe() {
   const w = app().querySelector('.sub-sheet')?.parentElement;
   if (!w) return false;
@@ -710,18 +711,19 @@ export function booked() {
       if (a.dataset.act === 'restart') { resetFlow(); go('/'); }
       if (a.dataset.act === 'rate') go('/rate');
     });
-    // second subscribe question, after they have seen the value (skipped for presenter jumps)
-    const subTimer = !params.shot && S.flow.subPre && !S.flow.subPost
+    // the subscribe question, after they have seen the value (skipped for previews and presenter jumps)
+    const subTimer = !params.shot && !jumped
       ? setTimeout(() => openSubscribe('post', () => go('/rate')), 1400) : null;
+    jumped = false;
     return () => { clearInterval(tick); clearTimeout(subTimer); map && map.destroy(); };
   });
 }
 
 // ------------------------------------------------------------------ qual (offline part, on paper)
 export function qual() {
-  const steps = ['qual1t', 'qual2t', 'qual3t', 'qual4t'];
-  const icons = ['utensils', 'alert', 'sliders', 'chat'];
-  const now = Math.min(S.qual || 0, 3);
+  const steps = ['qual1t', 'qual2t', 'qual3t'];
+  const icons = ['utensils', 'alert', 'sliders'];
+  const now = Math.min(S.qual || 0, steps.length - 1);
   mount(`
   <section class="screen" data-screen="qual">
     <header class="bar"><span class="icon-btn" aria-hidden="true"></span><div class="title">${t('stepQual')}</div>${testBadge()}${langBtn()}</header>
@@ -798,6 +800,7 @@ export function jumpTo(step) {
     if (S.match) S.match.stop();
     S.match = frozenMatch({ items, party: S.party, when: S.when, mode: 'booked' });
     S.flow.tried = true;
+    jumped = true;
     go('/booked');
   }
 }
@@ -814,7 +817,13 @@ export function shot(name) {
   }
   const items = [...S.selected].map(([id, channel]) => ({ id, channel, walkMin: cand(id).walkMin }));
   if (name === 'intro') return intro();
-  if (name === 'pass') { const screen = choose(); openSubscribe('pre', null, { preview: true }); return screen; }
+  if (name === 'pass') {
+    // the Pass question as people see it: on the booking screen, right after a Yes
+    S.match = frozenMatch({ items, party: S.party, when: S.when, mode: 'booked' });
+    const screen = booked();
+    openSubscribe('post', null, { preview: true });
+    return screen;
+  }
   if (name === 'choose') {
     const screen = choose();
     // previews should show the picked rows, so scroll the list into view
