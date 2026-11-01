@@ -821,7 +821,7 @@ textarea.input { height: auto; min-height: 64px; padding: 12px 14px; resize: ver
   .pv-timer-btns { display: flex; gap: 6px; }
   .pv-timer-btns button { height: 34px; min-width: 42px; padding: 0 10px; border-radius: 10px; background: rgba(255, 255, 255, .14); color: #fff; font-weight: 800; font-size: 14px; display: inline-flex; align-items: center; justify-content: center; }
   .pv-timer-btns button.go { background: #fff; color: var(--ink); min-width: 78px; }
-  .pv-qual-steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 18px 0 18px; }
+  .pv-qual-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 18px 0 18px; }
   .pv-qual-steps button { height: 72px; display: flex; align-items: center; gap: 10px; padding: 0 14px; border-radius: 16px; background: var(--bg-3); border: 2px solid var(--line); color: var(--ink-3); text-align: left; font-size: 18px; font-weight: 800; line-height: 1.15; }
   .pv-qual-steps button > span:last-child { display: flex; flex-direction: column; min-width: 0; }
   .pv-qual-steps .n { width: 34px; height: 34px; flex: none; border-radius: 10px; display: grid; place-items: center; background: var(--line); color: var(--ink-2); font-size: 16px; }

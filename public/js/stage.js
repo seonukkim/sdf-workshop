@@ -15,8 +15,8 @@ const WIDE = window.matchMedia('(min-width: 1100px)');
 const CANVAS = { w: 1600, h: 900 };
 const ROW_H = 116;
 const ROW_GAP = 12;
-const QUAL_STEPS = 4;
-const QUAL_MIN = [6, 4, 8, 7]; // default minutes per Qual part (write · what if · A3 2×2 · discuss)
+const QUAL_STEPS = 3;
+const QUAL_MIN = [7, 3, 8]; // default minutes per Qual part (write ideas · what if · A3 2×2 with the group)
 let route = location.pathname;
 let tick = null;
 let showResults = false;     // results stay hidden until the facilitator asks for them
@@ -323,7 +323,7 @@ function dQuant() {
 // step 5 · Qual: offline on A3 paper with post-its, guided up to the discussion
 function dQual() {
   const q = Math.min(S.qual || 0, QUAL_STEPS - 1);
-  const keys = ['qual1t', 'qual2t', 'qual3t', 'qual4t'];
+  const keys = ['qual1t', 'qual2t', 'qual3t'];
   const chips = keys.map((k, i) => `<button class="${i < q ? 'done' : i === q ? 'now' : ''}" data-qual="${i}"><span class="n">${i + 1}</span><span>${en(k)}<small class="ko">${ko(k)}</small></span></button>`).join('');
   let body = '';
   if (q === 0) {
@@ -337,17 +337,10 @@ function dQual() {
         <div>${icon('alert')}<b>${en('qual2a')}</b><span class="ko">${ko('qual2a')}</span></div>
         <div>${icon('ban')}<b>${en('qual2b')}</b><span class="ko">${ko('qual2b')}</span></div>
       </div>`;
-  } else if (q === 2) {
+  } else {
     body = `
       ${miniQuad('qual3x', 'qual3y', ['qpMP', 'qpNP', 'qpMF', 'qpNN'], 'big')}
       <p class="pv-prompt">${icon('star', 'sm')}<span>${bi('qual3p')}</span></p>`;
-  } else {
-    body = `
-      <ul class="pv-discuss">
-        <li>${bi('qual4a')}</li>
-        <li>${bi('qual4b')}</li>
-        <li>${bi('qual4c')}</li>
-      </ul>`;
   }
   if (timer.part !== q) { clearInterval(timer.id); Object.assign(timer, { part: q, left: QUAL_MIN[q] * 60, running: false, id: null }); }
   return `
