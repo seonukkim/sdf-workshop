@@ -66,7 +66,7 @@ export function newFlow() {
     winner: null,
     winnerListingOnly: null,
     timeToYesSec: null,
-    // "Would you subscribe? ₩3,000/month" asked twice to find the sales point: before trying, after booking
+    // "Would you subscribe? ₩2,500/month" asked once, right after booking (subPost); subPre stays empty now
     subPre: null,        // 'yes' | 'maybe' | 'no'
     subPost: null,
   };

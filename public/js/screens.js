@@ -305,7 +305,7 @@ export function startMatch() {
   go('/wait');
 }
 
-// ------------------------------------------------------------------ subscribe question (₩3,000/month)
+// ------------------------------------------------------------------ subscribe question (₩2,500/month)
 // Asked once, right after every booking ('post'): by then people have tried the idea, so the answer means
 // something. It is an experiment: the answer is recorded (the last one counts), nothing is charged, and the
 // flow always continues. The popup cannot be dismissed without an answer.

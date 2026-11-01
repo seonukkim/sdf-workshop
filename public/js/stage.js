@@ -109,6 +109,7 @@ function toolbar() {
       <button class="tb-btn strong" data-admin="next" title="${esc(en('pvNext'))}">${en('pvNext')} ${icon('right', 'sm')}</button>
       <button class="tb-btn" data-admin="restart" title="${esc(en('pvRestart'))}">${icon('refresh', 'sm')}</button>
       <button class="tb-btn ${showResults ? 'on' : ''}" data-admin="results">${icon('chef', 'sm')}${showResults ? en('tbHide') : en('tbResults')}</button>
+      <a class="tb-btn" href="/results/" target="_blank" rel="noopener" title="${esc(ko('tbResultsPage'))}">${en('tbResultsPage')} ${icon('ext', 'xs')}</a>
       <button class="tb-btn" data-admin="menu" title="${esc(en('facOpen'))}">${icon('sliders', 'sm')}</button>
       <span class="tb-tag" title="${esc(ko('pvAdmin'))}">${icon('lock', 'xs')}${en('pvAdmin')}</span>
     </div>
@@ -290,7 +291,7 @@ function dChoose() {
 function passCard() {
   return `<div class="pv-pass">
     <span class="pass-tag">${icon('star', 'xs')}${en('pvPassT')}</span>
-    <p class="pv-price"><b>${en('subPrice')}</b><span>${en('pvPerMonth')}<span class="ko-inline">${ko('pvPerMonth')}</span></span></p>
+    <p class="pv-price"><b>${en('subPrice')}</b><span>${en('pvPerMonth')}</span></p>
     <ul>
       <li>${icon('check', 'sm')}<span>${en('pvPassSend')}<span class="ko">${ko('pvPassSend')}</span></span></li>
       <li class="free">${icon('pin', 'sm')}<span>${en('pvPassFree')}<span class="ko">${ko('pvPassFree')}</span></span></li>
@@ -453,8 +454,9 @@ function stopResults() { clearTimeout(resultsTimer); }
 function dResults() {
   const d = resultsData;
   if (!d) return `${top(bi('tbResults'))}<div class="pv-body"></div>`;
+  const fullPage = (cls) => `<a class="pv-chip ${cls}" href="/results/" target="_blank" rel="noopener">${icon('ext', 'sm')}<span>${en('pvOpenResults')}<span class="ko">${ko('pvOpenResults')}</span></span></a>`;
   if (d.needKey) {
-    return `${top(bi('tbResults'))}
+    return `${top(bi('tbResults'), fullPage('w4'))}
       <div class="pv-body"><form class="pv-keyform" id="pv-keyform"><label>${icon('lock', 'sm')}${en('tbKey')} <span class="ko-inline">${ko('tbKey')}</span></label>
         <input class="input" type="password" autocomplete="off"><button class="btn btn-primary">${en('tbKeyOpen')}</button>
         ${d.bad ? `<p class="err">${en('tbKeyBad')}</p>` : ''}</form></div>`;
@@ -471,7 +473,7 @@ function dResults() {
   const yes = asked.length ? `${Math.round((asked.filter((r) => r.flow.subPost === 'yes').length / asked.length) * 100)}%` : '–';
   const names = ['s1t', 's2t', 's3t', 's4t'];
   const at = d.at ? d.at.toTimeString().slice(0, 8) : '';
-  return `${top(bi('tbResults'), `<span class="pv-chip w3">${en('resUpdated')} ${at}</span>`)}
+  return `${top(bi('tbResults'), `<span class="pv-chip w3">${en('resUpdated')} ${at}</span>${fullPage('w4')}`)}
     <div class="pv-body g12">
       <div class="pv-res-chart s6">${resChart(means, dots)}</div>
       <div class="pv-res-side s6">
