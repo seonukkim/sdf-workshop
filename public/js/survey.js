@@ -2,12 +2,13 @@
 // ONE 2×2 (How convenient is it? × Would you pay for it?, both 1–10), one item per screen → thanks.
 // Post-it ideas are collected on paper for the affinity diagram, so they are not asked here.
 // Profile fields mirror what the team already collected in the interview forms (gender, age, affiliation,
-// meals out, apps). No name, phone or e-mail is asked. Every question is required for participants.
-// Facilitator mode (the PC presenter view, S.admin) can skip anything and never sends answers.
+// meals out, apps). No name, phone or e-mail is asked. Every question is required: the survey's own buttons
+// always check them, on any screen size. Facilitator mode (the PC presenter view, S.admin) never sends
+// answers, and only its toolbar "Next screen" (adminAdvance) moves on without them.
 
 import { S, t, lsGet, lsSet, setLang, resetPerson } from './state.js';
 import { esc, icon, $, $$, uid, quadrant, QUAD_KEY, toast } from './util.js';
-import { mount, langBtn, openPreview } from './screens.js';
+import { mount, langBtn, openPreview, shotImg } from './screens.js';
 import { go } from './nav.js';
 
 const DRAFT = 'tmc.survey3';
@@ -83,6 +84,21 @@ export function render() {
   return stepRate();
 }
 
+// required answers: the profile fields that are still empty, and the first step that is not complete
+function profileGaps(P) {
+  const age = parseInt(P.age, 10);
+  return [
+    ['gender', !P.gender], ['age', !(age >= 10 && age <= 99)], ['affiliation', !P.affiliation],
+    ['mealsOut', !P.mealsOut], ['apps', !P.apps.length],
+  ].filter(([, bad]) => bad).map(([k]) => k);
+}
+function firstGap() {
+  if (!D.consent || !D.group) return { step: 0, item: 0 };
+  if (profileGaps(D.profile).length) return { step: 1, item: 0 };
+  const item = ITEMS.findIndex((it) => D.ratings[it.id].x == null || D.ratings[it.id].y == null);
+  return item < 0 ? null : { step: 2, item };
+}
+
 // facilitator "Next screen" on the PC: move on without answers and without saving anything
 export function adminAdvance() {
   if ((D.step || 0) < 2) { D.step = (D.step || 0) + 1; save(); render(); return; }
@@ -130,12 +146,12 @@ function stepStart() {
       </div>
       <div class="sv">
         ${adminNote()}
-        <label class="consent"><input type="checkbox" id="consent" ${D.consent ? 'checked' : ''}><span>${t('consentText')}</span></label>
+        <label class="consent"><input type="checkbox" id="consent" aria-describedby="err" ${D.consent ? 'checked' : ''}><span>${t('consentText')}</span></label>
+        <p class="err" id="err" hidden>${t('needConsent')}</p>
         <div class="field" id="f-group"><span class="lbl">${t('groupL')}</span>
           <div class="opts-wrap">${GROUPS.map(([v, k]) => chip('group', v, k === v ? v : t(k), D.group === v)).join('')}</div>
           <p class="err" hidden>${t('needField')}</p>
         </div>
-        <p class="err" id="err" hidden>${t('needConsent')}</p>
       </div>
     </div>
     <div class="dock"><button class="btn btn-primary btn-lg btn-block" data-act="next">${t('next')}${icon('right')}</button></div>
@@ -152,10 +168,8 @@ function stepStart() {
         $('#f-group .err', root).hidden = true;
       }
       if (a.dataset.act === 'next') {
-        if (!S.admin) {
-          if (!D.consent) { $('#err', root).hidden = false; return; }
-          if (!D.group) { $('#f-group .err', root).hidden = false; toast(t('needField')); return; }
-        }
+        if (!D.consent) { $('#err', root).hidden = false; toast(t('needConsent')); return; }
+        if (!D.group) { $('#f-group .err', root).hidden = false; toast(t('needField')); return; }
         D.step = 1; save(); render();
       }
     });
@@ -204,11 +218,7 @@ function stepAbout() {
         if (err) err.hidden = true;
       }
       if (a.dataset.act === 'next') {
-        const age = parseInt(P.age, 10);
-        const missing = S.admin ? [] : [
-          ['gender', !P.gender], ['age', !(age >= 10 && age <= 99)], ['affiliation', !P.affiliation],
-          ['mealsOut', !P.mealsOut], ['apps', !P.apps.length],
-        ].filter(([, bad]) => bad).map(([k]) => k);
+        const missing = profileGaps(P);
         missing.forEach((k) => { root.querySelector(`#f-${k} .err`).hidden = false; });
         if (missing.length) {
           $(`#f-${missing[0]}`, root).scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -237,7 +247,7 @@ function stepRate() {
         <div class="rate-head"><span class="rate-tag">${t('rateTitle')}</span><span class="rate-count">${i + 1} / ${ITEMS.length}</span></div>
         <div class="rate-item solo" id="ri-${it.id}">
           <div class="rate-top">
-            <div class="shot-frame"><iframe src="/?shot=${it.shot}&lang=${S.lang}&at=${S.scenarioId}" title="${esc(t(it.title))}" tabindex="-1" aria-hidden="true"></iframe><button data-act="preview" data-shot="${it.shot}" aria-label="${esc(t('tapToSee'))}"></button></div>
+            <div class="shot-frame"><img src="${shotImg(it.shot)}" alt="" decoding="async"><button data-act="preview" data-shot="${it.shot}" aria-label="${esc(t('tapToSee'))}"></button></div>
             <div><h3 class="h-sec">${t(it.title)}</h3><p class="t-sub" style="margin:4px 0 0">${t(it.desc)}</p>
               <button class="link-btn" data-act="preview" data-shot="${it.shot}">${t('tapToSee')}${icon('right', 'sm')}</button></div>
           </div>
@@ -256,7 +266,7 @@ function stepRate() {
     root.addEventListener('click', async (e) => {
       const a = e.target.closest('[data-act="go"]');
       if (!a) return;
-      if (!S.admin && (r.x == null || r.y == null)) {
+      if (r.x == null || r.y == null) {
         $('#err', root).hidden = false;
         toast(t('needField'));
         return;
@@ -291,9 +301,12 @@ async function post(body) {
 let lastAnswers = null;
 let lastState = 'saved'; // saved | queued | admin
 async function finish() {
+  if (S.admin) { lastAnswers = payload(); thanks('admin'); return; } // facilitator runs never reach the statistics
+  // never send an incomplete answer: go back to the first question that is still empty
+  const gap = firstGap();
+  if (gap) { D.step = gap.step; D.item = gap.item; save(); render(); toast(t('needField')); return; }
   const body = payload();
   lastAnswers = body;
-  if (S.admin) { thanks('admin'); return; } // facilitator runs never reach the statistics
   try {
     await post(body);
     thanks('saved');

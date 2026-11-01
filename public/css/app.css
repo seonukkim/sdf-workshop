@@ -463,7 +463,7 @@ textarea.input { height: auto; min-height: 64px; padding: 12px 14px; resize: ver
 .rate-top { display: grid; grid-template-columns: 96px 1fr; gap: 12px; padding: 14px 14px 4px; align-items: start; }
 .rate-top.noshot { grid-template-columns: 1fr; }
 .shot-frame { position: relative; width: 96px; height: 208px; border-radius: 14px; overflow: hidden; border: 3px solid #1a1a1a; background: #fff; }
-.shot-frame iframe { width: 390px; height: 844px; border: 0; transform: scale(.231); transform-origin: 0 0; pointer-events: none; position: absolute; left: 0; top: 0; }
+.shot-frame img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; object-position: top; }
 .shot-frame button { position: absolute; inset: 0; z-index: 2; }
 .rate-tag { font-size: 12px; font-weight: 750; color: var(--brand-strong); }
 .rate-q { padding: 4px 14px 14px; }
@@ -566,7 +566,6 @@ textarea.input { height: auto; min-height: 64px; padding: 12px 14px; resize: ver
 .rate-item.solo { margin-top: 10px; }
 .rate-item.solo .rate-top { padding: 12px 12px 2px; grid-template-columns: 84px 1fr; }
 .rate-item.solo .shot-frame { width: 84px; height: 182px; }
-.rate-item.solo .shot-frame iframe { transform: scale(.2154); }
 .rate-item.solo .rate-q { padding: 0 12px 12px; }
 .rate-item.solo .scale-wrap { margin-top: 10px; }
 .rate-item.solo .quad-line { margin-top: 10px; padding-top: 10px; min-height: 0; }

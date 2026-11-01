@@ -318,7 +318,7 @@ function dBooked() {
   const tile = (k, v) => `<div class="pv-tile s4"><small>${en(k)}<span class="ko-inline">${ko(k)}</span></small><b>${v}</b></div>`;
   return `${top(bi('pvBookedTitle'), subChip())}
     <div class="pv-body">
-      <div class="g12">${tile('pvSent', st.reqs.length)}${tile('pvTime', `${Math.max(1, Math.round(st.winAt || 7))}s`)}${tile('pvCancelled', cancelled)}</div>
+      <div class="g12">${tile('pvSent', st.reqs.length)}${tile('pvTime', `${Math.max(1, Math.floor(st.winAt || 7))}s`)}${tile('pvCancelled', cancelled)}</div>
       ${hub(st.reqs, { st, avail: BODY_H - TILE_H - GAP - (q ? Q_H + GAP : 0) })}
       ${q}
     </div>`;

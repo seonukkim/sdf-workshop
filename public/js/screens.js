@@ -327,7 +327,7 @@ export function openSubscribe(moment, onNext, { preview = false } = {}) {
   if (app().querySelector('.sub-sheet')) return;
   subNext = onNext;
   const f = S.flow;
-  const secs = Math.max(1, Math.round(S.match?.state?.winAt || 7));
+  const secs = Math.max(1, Math.floor(S.match?.state?.winAt || 7)); // whole seconds, like the 0:06 timer on the wait screen
   S.subSheet = moment;
   emit('select');
   const wrap = document.createElement('div');
@@ -514,14 +514,12 @@ export function wait() {
       : st.reqs.length === 1 ? t('asking1') : t('asking', { n: st.reqs.length }));
   const radarCls = () => (st.result === 'booked' ? 'done' : st.result === 'none' ? 'none' : '');
   const radarIcon = () => (st.result === 'booked' ? icon('check', 'lg') : st.result === 'none' ? icon('x', 'lg') : icon('chat', 'lg'));
+  // the title above already says who said Yes first (or that no one did), so the panel never repeats it
   const resultHtml = () => {
-    if (st.result === 'booked') {
-      return `<div class="result-panel ok"><div class="h-sec">${icon('check')}${banner()}</div></div>`;
-    }
     if (st.result === 'none') {
       const no = st.reqs.filter((r) => r.status === 'no').length;
       const na = st.reqs.filter((r) => r.status === 'noanswer').length;
-      return `<div class="result-panel none"><div class="h-sec">${icon('alert')}${t('noneTitle')}</div><p class="t-sub" style="margin:0">${t('noneBody', { no, na })}</p></div>`;
+      return `<div class="result-panel none"><div class="h-sec">${icon('alert')}${t('noneBody', { no, na })}</div></div>`;
     }
     return '';
   };
@@ -655,7 +653,7 @@ export function booked() {
       <div class="done-hero">
         <div class="check-pop">${icon('check')}</div>
         <h1 class="h-title">${t('bookedTitle')}</h1>
-        <p class="t-sub" style="margin:4px 0 0">${t('firstYes', { s: Math.max(1, Math.round(st.winAt || 7)) })}</p>
+        <p class="t-sub" style="margin:4px 0 0">${t('firstYes', { s: Math.max(1, Math.floor(st.winAt || 7)) })}</p>
       </div>
       <div class="ticket">
         <div class="ticket-top">
@@ -841,6 +839,10 @@ export function shot(name) {
   return wait();
 }
 
+// the survey shows pictures of the rated screens (public/img/shots, taken from ?shot=… at 390×844): light on
+// phone data and instant, unlike a live copy of the app per item. Retake them when those screens change.
+export const shotImg = (name) => `/img/shots/${name}-${S.lang === 'ko' ? 'ko' : 'en'}.webp`;
+
 // preview overlay: show one screen full size (used by the survey)
 export function openPreview(name) {
   const wrap = document.createElement('div');
@@ -850,7 +852,7 @@ export function openPreview(name) {
     <div class="sheet" role="dialog" aria-modal="true" style="align-items:center">
       <div class="grab"></div>
       <div style="width:${Math.round(390 * scale)}px;height:${Math.round(844 * scale)}px;margin:8px auto;border-radius:18px;overflow:hidden;border:3px solid #1a1a1a;position:relative">
-        <iframe src="/?shot=${name}&lang=${S.lang}&at=${S.scenarioId}" title="preview" style="width:390px;height:844px;border:0;transform:scale(${scale});transform-origin:0 0;position:absolute;left:0;top:0"></iframe>
+        <img src="${shotImg(name)}" alt="" style="display:block;width:100%;height:100%">
       </div>
       <div class="sheet-foot" style="width:100%"><button class="btn btn-dark btn-lg btn-block" data-act="close">${t('close')}</button></div>
     </div>`;
