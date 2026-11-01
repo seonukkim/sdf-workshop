@@ -337,8 +337,7 @@ function dBooked() {
     </div>`;
 }
 
-// Booked: the subscribe question pops up on the phone 1.4 s after the booking; highlighted while it is open,
-// then the answer (the last answer counts)
+// Booked: highlighted while the subscribe question is open on the phone, then the answer (the last one counts)
 function subChip() {
   const price = `${en('subPrice')} ${en('pvPerMonth')}`;
   if (S.subSheet) return `<span class="pv-chip w4 pay on">${icon('star', 'sm')}<span>${en('pvSubAsk')} · ${price}<span class="ko">${ko('pvSubAsk')}</span></span></span>`;
@@ -492,35 +491,57 @@ function dResults() {
       <div class="pv-res-side s6">
         <div class="pv-tile"><small>${en('resN')}<span class="ko-inline">${ko('resN')}</span></small><b>${rows.length}</b></div>
         <div class="pv-tile"><small>${en('resSubAfter')}<span class="ko-inline">${ko('resSubAfter')}</span></small><b>${yes}</b></div>
-        <ol class="pv-res-legend">${names.map((k) => `<li>${en(k)}</li>`).join('')}</ol>
+        <ol class="pv-res-legend">${names.map((k, i) => `<li><span class="rc-n">${i + 1}</span><span>${en(k)}<span class="ko">${ko(k)}</span></span></li>`).join('')}</ol>
         ${rows.length ? '' : `<p class="pv-res-empty">${en('resEmpty')}</p>`}
       </div>
     </div>`;
 }
 
+// Results 2×2 (columns 1–6): four pastel cells with their names inside (two lines at most, never across the
+// middle), solid 1 px lines, each answer as a faint dot and each item's mean as a numbered dot in its cell's
+// colour. A mean that would cover another mean or a cell name tries the spots around it in rings of 22 px
+// and never leaves its cell. Same colours as the results page.
+const PLOT = 478;       // px, square: card 546 − 18 above and right − 50 for the axis names
+const QC = { mp: '#FFA36C', np: '#F7B2B7', mf: '#FFD2BA', nn: '#E4E2DF' };
+const NAME_H = 70;      // room the cell name takes at the outer edge (16 padding + two lines + Korean)
+const DOT_R = 18;
+
 function resChart(means, dots) {
-  const W = 520, pad = 44, inner = W - pad - 16;
-  const X = (v) => pad + ((v - 0.5) / 10) * inner;
-  const Y = (v) => 16 + inner - ((v - 0.5) / 10) * inner;
-  const mid = pad + inner / 2, midY = 16 + inner / 2;
-  let g = `<svg viewBox="0 0 ${W} ${W}" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard Variable, sans-serif">`;
-  g += `<rect x="${pad}" y="16" width="${inner}" height="${inner}" fill="#fff" stroke="#DCD6CE"/><rect x="${mid}" y="16" width="${inner / 2}" height="${inner / 2}" fill="#FFF1EA"/>`;
-  g += `<line x1="${mid}" y1="16" x2="${mid}" y2="${16 + inner}" stroke="#A39B93" stroke-dasharray="5 5"/><line x1="${pad}" y1="${midY}" x2="${pad + inner}" y2="${midY}" stroke="#A39B93" stroke-dasharray="5 5"/>`;
-  const lab = (x, y, k, anchor, c) => `<text x="${x}" y="${y}" font-size="20" font-weight="800" fill="${c}" text-anchor="${anchor}">${esc(en(k))}</text>`;
-  g += lab(pad + inner - 10, 44, 'qMP', 'end', '#CC4410') + lab(pad + 10, 44, 'qNP', 'start', '#6A44B8') + lab(pad + inner - 10, 16 + inner - 14, 'qMF', 'end', '#067A55') + lab(pad + 10, 16 + inner - 14, 'qNN', 'start', '#8A827B');
-  g += `<text x="${pad + inner / 2}" y="${W - 2}" font-size="18" font-weight="800" fill="#3D3935" text-anchor="middle">${esc(en('qConv'))} →</text>`;
-  g += `<text x="16" y="${16 + inner / 2}" font-size="18" font-weight="800" fill="#3D3935" text-anchor="middle" transform="rotate(-90 16 ${16 + inner / 2})">${esc(en('qPay'))} →</text>`;
-  dots.forEach((p, i) => { g += `<circle cx="${X(p.x) + ((i * 37) % 9) - 4}" cy="${Y(p.y) + ((i * 53) % 9) - 4}" r="5" fill="#6F6862" fill-opacity=".35"/>`; });
-  // items with the same average would hide each other: nudge later ones sideways
+  const half = PLOT / 2;
+  const at = (x, y) => ({ cx: ((x - 0.5) / 10) * PLOT, cy: PLOT - ((y - 0.5) / 10) * PLOT });
+  const cellOf = (cx, cy) => {
+    const right = cx >= half, upper = cy < half;
+    return { key: right ? (upper ? 'mp' : 'mf') : (upper ? 'np' : 'nn'), x0: right ? half : 0, x1: right ? PLOT : half, y0: upper ? 0 : half, y1: upper ? half : PLOT, upper };
+  };
+  const rings = [[0, 0]];
+  for (let k = 1; k <= 5; k++) [[k, 0], [-k, 0], [0, k], [0, -k], [k, k], [-k, k], [k, -k], [-k, -k]].forEach(([a, b]) => rings.push([a * 22, b * 22]));
   const placed = [];
-  means.forEach((m) => {
-    let cx = X(m.x);
-    const cy = Y(m.y);
-    while (placed.some((p) => Math.abs(p.x - cx) < 30 && Math.abs(p.y - cy) < 30)) cx += 34;
-    placed.push({ x: cx, y: cy });
-    g += `<g><circle cx="${cx}" cy="${cy}" r="24" fill="#CC4410" stroke="#fff" stroke-width="3"/><text x="${cx}" y="${cy + 7}" font-size="21" font-weight="800" fill="#fff" text-anchor="middle">${m.label}</text></g>`;
-  });
-  return g + '</svg>';
+  const fits = (c, x, y) => {
+    if (x - DOT_R < c.x0 + 2 || x + DOT_R > c.x1 - 2 || y - DOT_R < c.y0 + 2 || y + DOT_R > c.y1 - 2) return false;
+    if (c.upper ? y - DOT_R < c.y0 + NAME_H : y + DOT_R > c.y1 - NAME_H) return false; // keep off the cell name
+    return placed.every((p) => Math.hypot(p.x - x, p.y - y) >= DOT_R * 2 + 2);
+  };
+  const meanDots = means.map((m) => {
+    const { cx, cy } = at(m.x, m.y);
+    const c = cellOf(cx, cy);
+    const spot = rings.map(([dx, dy]) => [cx + dx, cy + dy]).find(([x, y]) => fits(c, x, y))
+      || [Math.min(Math.max(cx, c.x0 + DOT_R + 2), c.x1 - DOT_R - 2), Math.min(Math.max(cy, c.y0 + DOT_R + 2), c.y1 - DOT_R - 2)];
+    placed.push({ x: spot[0], y: spot[1] });
+    return `<i class="rc-mean" style="left:${spot[0].toFixed(1)}px;top:${spot[1].toFixed(1)}px;background:${QC[c.key]}">${m.label}</i>`;
+  }).join('');
+  // single answers: small faint dots, also kept off the cell names (an extreme answer sits at their edge)
+  const faint = dots.map((p, i) => {
+    const { cx, cy } = at(p.x, p.y);
+    const c = cellOf(cx, cy);
+    const x = Math.min(c.x1 - 6, Math.max(c.x0 + 6, cx + ((i * 37) % 9) - 4));
+    const y0 = cy + ((i * 53) % 9) - 4;
+    const y = c.upper ? Math.min(c.y1 - 6, Math.max(c.y0 + NAME_H + 5, y0)) : Math.max(c.y0 + 6, Math.min(c.y1 - NAME_H - 5, y0));
+    return `<i class="rc-dot" style="left:${x.toFixed(1)}px;top:${y.toFixed(1)}px"></i>`;
+  }).join('');
+  const cell = (k, q) => `<div class="rc-cell ${q}"><b>${en(k)}</b><span class="ko">${ko(k)}</span></div>`;
+  return `<div class="rc-plot">${cell('qNP', 'np')}${cell('qMP', 'mp')}${cell('qNN', 'nn')}${cell('qMF', 'mf')}${faint}${meanDots}</div>
+    <span class="rc-x">${en('qConv')} →<span class="ko-inline">${ko('qConv')}</span></span>
+    <span class="rc-y">${en('qPay')} →<span class="ko-inline">${ko('qPay')}</span></span>`;
 }
 
 // ------------------------------------------------------------------ hub & spoke
