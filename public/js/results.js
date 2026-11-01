@@ -106,10 +106,10 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '
 const $ = (s) => document.querySelector(s);
 
 const ITEMS = ['s1', 's2', 's3', 's4'];
-// pastel, orange-led palette (post-it tones): soft orange, butter yellow, peach, light warm gray.
+// pastel, orange-led palette: soft orange, peach, blush and light warm gray (no yellow, no brown).
 // Light fills are never the only cue: values are printed in ink next to every mark and the tables repeat them.
-const QCOLOR = { mp: '#FFA36C', np: '#FFC2B0', mf: '#FFD66B', nn: '#E3E1DE' };
-const QTINT = { mp: '#FFF0E6', np: '#FFF3F0', mf: '#FFF8E1', nn: '#F8F7F6' };
+const QCOLOR = { mp: '#FFA36C', np: '#F7B2B7', mf: '#FFD2BA', nn: '#E4E2DF' };
+const QTINT = { mp: '#FFF0E6', np: '#FFF1F2', mf: '#FFF7F1', nn: '#F8F7F6' };
 // numbers inside a dot: ink on pastel fills
 const onFill = () => '#1C1A19';
 const quad = (x, y) => (x == null || y == null ? null : x >= 6 ? (y >= 6 ? 'mp' : 'mf') : (y >= 6 ? 'np' : 'nn'));
@@ -408,10 +408,10 @@ function compareSection(rows) {
 }
 
 // ------------------------------------------------------------------ at a glance
-// Pastel and warm: soft orange = the money side (would pay, subscribe yes), butter yellow = convenient / maybe,
+// Pastel and warm: soft orange = the money side (would pay, subscribe yes), blush = convenient, peach = maybe,
 // light warm gray = no or low. Every mark also carries its value in ink, so the light fills never stand alone.
 // Thin marks, hairline solid grid, values at bar tips, tooltips on hover and focus.
-const VC = { pay: '#FFA36C', line: '#FF8A4C', payFill: 'rgba(255, 163, 108, .28)', conv: '#FFD66B', yes: '#FFA36C', maybe: '#FFD66B', no: '#E3E1DE', low: '#E9E6E2', grid: '#ECE8E2', axis: '#8A827B', ink: '#1C1A19', ink2: '#5B5550', dot: '#C9C4BE' };
+const VC = { pay: '#FFA36C', line: '#FF8A4C', payFill: 'rgba(255, 163, 108, .28)', conv: '#F7B2B7', yes: '#FFA36C', maybe: '#FFD2BA', no: '#E4E2DF', low: '#E9E6E2', grid: '#ECE8E2', axis: '#8A827B', ink: '#1C1A19', ink2: '#5B5550', dot: '#C9C4BE' };
 const FONT = 'font-family="Pretendard Variable, sans-serif"';
 const tipAttr = (s) => `data-tip="${esc(s)}" tabindex="0" aria-label="${esc(s)}"`;
 const clock = (ms, sec) => new Date(ms).toLocaleTimeString('sv-SE', { timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit', ...(sec ? { second: '2-digit' } : {}) });
