@@ -96,7 +96,17 @@ const T = {
     cSub: '예약 뒤 구독', cCh: 'DM : AI 전화', cPick: '고른 곳', cYes: '첫 수락', subLine: '네 {y} · 잘 모르겠어요 {m} · 아니요 {n}',
   },
 };
-let lang = (localStorage.getItem('tmc.lang') || (navigator.language || '').slice(0, 2)) === 'ko' ? 'ko' : 'en';
+// language, same rule as the app: a ?lang=en|ko link sets this page only; else the language last picked
+// with the button here (kept apart from the app's pick, so this page never changes the big screen);
+// else the device's first language: Korean if it is Korean, English for every other language
+const LANG_KEY = 'tmc.resultsLang';
+function startLang() {
+  const q = new URLSearchParams(location.search).get('lang');
+  if (q === 'en' || q === 'ko') return q;
+  try { const s = localStorage.getItem(LANG_KEY); if (s === 'en' || s === 'ko') return s; } catch { /* ignore */ }
+  return /^ko(-|$)/i.test(navigator.languages?.[0] || navigator.language || '') ? 'ko' : 'en';
+}
+let lang = startLang();
 const t = (k, v) => {
   let s = T[lang][k] ?? T.en[k] ?? k;
   if (v) s = s.replace(/\{(\w+)\}/g, (m, x) => (v[x] ?? m));
@@ -142,7 +152,7 @@ function readKey() {
   try { sessionStorage.removeItem('tmc.key'); } catch { /* ignore */ }
   const m = location.hash.match(/key=([^&]+)/);
   KEY = m ? decodeURIComponent(m[1]) : null;
-  if (m) history.replaceState(null, '', location.pathname);
+  if (m) history.replaceState(null, '', location.pathname + location.search);
 }
 
 // answers are saved on the server (D1) the moment a phone submits; this page re-reads them every 10 s
@@ -601,10 +611,14 @@ function showTip(text, x, y) {
 }
 function hideTip() { const el = $('#rs-tip'); if (el) el.hidden = true; }
 
-function draw() {
+function labels() {
   document.documentElement.lang = lang;
   document.querySelectorAll('[data-t]').forEach((el) => { el.textContent = t(el.dataset.t); });
   $('#lang').textContent = lang === 'ko' ? 'English' : '한국어';
+}
+
+function draw() {
+  labels();
   const rows = filtered();
   $('#filters').innerHTML = filtersHtml(rows);
   $('#kpis').innerHTML = kpis(rows);
@@ -801,7 +815,14 @@ $('#cmp-dims').addEventListener('click', (e) => {
   CMP = b.dataset.dim;
   compareSection(filtered());
 });
-$('#lang').addEventListener('click', () => { lang = lang === 'ko' ? 'en' : 'ko'; if (ROWS.length || !$('#dash').hidden) draw(); else document.querySelectorAll('[data-t]').forEach((el) => { el.textContent = t(el.dataset.t); }); });
+$('#lang').addEventListener('click', () => {
+  lang = lang === 'ko' ? 'en' : 'ko';
+  try { localStorage.setItem(LANG_KEY, lang); } catch { /* ignore */ }
+  // a button pick wins over a ?lang= link, so a reload keeps it
+  const u = new URL(location.href);
+  if (u.searchParams.has('lang')) { u.searchParams.delete('lang'); history.replaceState(null, '', u.pathname + u.search); }
+  if (ROWS.length || !$('#dash').hidden) draw(); else labels();
+});
 // tooltips for the charts: hover or keyboard focus shows the value (the tables keep every value too)
 document.addEventListener('pointermove', (e) => {
   const m = e.target.closest?.('[data-tip]');
@@ -818,7 +839,6 @@ document.addEventListener('focusout', hideTip);
 $('#ov-time').addEventListener('pointermove', timelineHover);
 $('#ov-time').addEventListener('pointerleave', () => { timelineMark(null); hideTip(); });
 
-document.querySelectorAll('[data-t]').forEach((el) => { el.textContent = t(el.dataset.t); });
-$('#lang').textContent = lang === 'ko' ? 'English' : '한국어';
+labels();
 readKey();
 load();

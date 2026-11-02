@@ -28,6 +28,8 @@ Only the facilitator tab shows the **floating toolbar** (below the canvas): **Ne
 
 On a phone, the facilitator settings open by **pressing and holding the TEST badge**. URL switches also work: `?outcome=bad|none|normal`, `?speed=fast`, `?lang=en|ko`, `?at=guyeong|samsan`.
 
+**Language:** each phone or laptop starts in its own device language (Korean when the device’s first language is Korean, English for every other language), not by location. The big screen starts in English for the whole room. A tap on the language button is remembered on that device; a `?lang=en|ko` link applies to that page only. The results page follows the same rule but remembers its own choice, so it never changes the big screen.
+
 Before the real session, clear rehearsal answers on the results page (tick the top box, then **Delete selected**).
 
 ## What is real and what is simulated
