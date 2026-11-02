@@ -10,7 +10,7 @@
 // the toolbar, can skip anything and never saves answers. Every other screen, phone or laptop, is a participant
 // whose answers are saved.
 
-import { S, params, scenario, place, cand, trust, resetPerson } from './state.js';
+import { S, params, FAC, scenario, place, cand, trust, resetPerson } from './state.js';
 import { STR, fill } from './i18n.js';
 import { esc, icon, mmss } from './util.js';
 import { jumpTo, onFacClick, skipSubscribe } from './screens.js';
@@ -20,16 +20,6 @@ import { go } from './nav.js';
 const WIDE = window.matchMedia('(min-width: 1100px)');
 const CANVAS = { w: 1600, h: 900 };
 const GRID = new URLSearchParams(location.search).get('grid') === '1'; // layout check: column and row lines
-const FAC = (() => {
-  const v = new URLSearchParams(location.search).get('fac');
-  try {
-    if (v === '1') sessionStorage.setItem('tmc.facilitator', '1');
-    if (v === '0') sessionStorage.removeItem('tmc.facilitator');
-    return sessionStorage.getItem('tmc.facilitator') === '1';
-  } catch {
-    return v === '1';
-  }
-})();
 const GAP = 18;          // gutter, and the space between blocks
 const BODY_H = 586;      // content 648 − top line 44 − 18
 const ROW_MAX = 116;     // tallest row of the hub diagram

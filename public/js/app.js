@@ -1,4 +1,4 @@
-import { S, params, setLang, emit } from './state.js';
+import { S, params, emit } from './state.js';
 import { intro, choose, wait, booked, qual, shot } from './screens.js';
 import { render as survey, thanks, flushQueue } from './survey.js';
 import { initStage } from './stage.js';
@@ -26,7 +26,7 @@ function go(path, { replace = false } = {}) {
 }
 
 async function boot() {
-  setLang(S.lang);
+  document.documentElement.lang = S.lang; // not remembered: the device language stays in charge until a tap
   if (params.shot) document.documentElement.classList.add('shot');
   try {
     const res = await fetch('/data/places.json');

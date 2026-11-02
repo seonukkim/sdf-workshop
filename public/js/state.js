@@ -27,12 +27,29 @@ export const params = {
   at: qs.get('at'),              // guyeong | samsan
 };
 
+// Facilitator mode is only the presenter PC, opened with ?fac=1 (kept for that tab; ?fac=0 ends it).
+export const FAC = (() => {
+  const v = qs.get('fac');
+  try {
+    if (v === '1') sessionStorage.setItem('tmc.facilitator', '1');
+    if (v === '0') sessionStorage.removeItem('tmc.facilitator');
+    return sessionStorage.getItem('tmc.facilitator') === '1';
+  } catch {
+    return v === '1';
+  }
+})();
+
+// Language: a ?lang= link (this page only), else what this visitor picked with the language button (remembered),
+// else the phone's or computer's own setting: Korean when it is set to Korean, English for everyone else, so
+// international students never land on Korean. The big screen PC starts in English because the whole room reads it.
+const okLang = (v) => (v === 'en' || v === 'ko' ? v : null);
+const deviceLang = () => (/^ko\b/i.test(navigator.languages?.[0] || navigator.language || '') ? 'ko' : 'en');
+
 const savedFac = lsGet('tmc.fac', {});
 
 export const S = {
   data: null,
-  // English first (plain English for the international workshop); Korean is one tap away and remembered
-  lang: params.lang || lsGet('tmc.lang', null) || 'en',
+  lang: okLang(params.lang) || okLang(lsGet('tmc.langPick', null)) || (FAC ? 'en' : deviceLang()),
   scenarioId: params.at || lsGet('tmc.scenario', 'guyeong'),
   party: 2,
   when: 'now',
@@ -83,7 +100,7 @@ export function emit(name, detail) {
 export function setLang(lang) {
   const changed = S.lang !== lang;
   S.lang = lang;
-  if (!params.shot) lsSet('tmc.lang', lang); // previews must not change the visitor's language
+  if (!params.shot) lsSet('tmc.langPick', lang); // only a tap lands here; previews must not change the visitor's language
   document.documentElement.lang = lang;
   if (changed) emit('lang', lang);
 }
